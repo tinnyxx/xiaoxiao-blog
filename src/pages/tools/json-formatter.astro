@@ -1,0 +1,141 @@
+---
+import { SITE_TITLE } from '../../consts';
+import Page from '../../layouts/Page.astro';
+---
+
+<Page title={`JSON 格式化 | ${SITE_TITLE}`} description="在浏览器中美化、压缩和复制 JSON。">
+	<p class="back"><a href="/tools">← 全部工具</a></p>
+	<h1>JSON 格式化</h1>
+	<p class="intro">粘贴 JSON 后可以美化、压缩或复制。全部在本地处理，不会发送到服务器。</p>
+
+	<div class="toolbar">
+		<button id="format-btn" type="button">格式化</button>
+		<button id="minify-btn" type="button">压缩</button>
+		<button id="copy-btn" type="button">复制</button>
+		<button id="clear-btn" type="button" class="ghost">清空</button>
+	</div>
+	<p id="status" class="status" aria-live="polite"></p>
+	<label class="sr-only" for="json-input">JSON 内容</label>
+	<textarea id="json-input" spellcheck="false" placeholder='{"hello":"xiaoxiao"}'></textarea>
+</Page>
+
+<style>
+	.back {
+		margin-bottom: 0.5rem;
+		font-size: 0.95rem;
+	}
+	.intro {
+		color: rgb(var(--gray));
+	}
+	.toolbar {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.6rem;
+		margin: 1rem 0 0.5rem;
+	}
+	button {
+		border: 0;
+		border-radius: 8px;
+		padding: 0.45rem 0.9rem;
+		background: var(--accent);
+		color: #fff;
+		font: inherit;
+		cursor: pointer;
+	}
+	button.ghost {
+		background: rgb(var(--gray-light));
+		color: rgb(var(--gray-dark));
+	}
+	button:hover {
+		background: var(--accent-dark);
+		color: #fff;
+	}
+	.status {
+		min-height: 1.5em;
+		margin: 0 0 0.6rem;
+		font-size: 0.95rem;
+		color: rgb(var(--gray));
+	}
+	.status.error {
+		color: #b42318;
+	}
+	.status.ok {
+		color: #027a48;
+	}
+	textarea {
+		box-sizing: border-box;
+		width: 100%;
+		min-height: 420px;
+		padding: 1rem;
+		border: 1px solid rgb(var(--gray-light));
+		border-radius: 12px;
+		font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+		font-size: 0.95rem;
+		line-height: 1.5;
+		resize: vertical;
+	}
+</style>
+
+<script>
+	const input = document.querySelector<HTMLTextAreaElement>('#json-input');
+	const status = document.querySelector<HTMLParagraphElement>('#status');
+	const formatBtn = document.querySelector('#format-btn');
+	const minifyBtn = document.querySelector('#minify-btn');
+	const copyBtn = document.querySelector('#copy-btn');
+	const clearBtn = document.querySelector('#clear-btn');
+
+	function setStatus(message: string, kind: '' | 'ok' | 'error' = '') {
+		if (!status) return;
+		status.textContent = message;
+		status.className = `status${kind ? ` ${kind}` : ''}`;
+	}
+
+	function parseJson() {
+		if (!input) return null;
+		const raw = input.value.trim();
+		if (!raw) {
+			setStatus('请先粘贴 JSON。', 'error');
+			return null;
+		}
+		try {
+			return JSON.parse(raw);
+		} catch (error) {
+			const message = error instanceof Error ? error.message : 'JSON 无法解析';
+			setStatus(message, 'error');
+			return null;
+		}
+	}
+
+	formatBtn?.addEventListener('click', () => {
+		const data = parseJson();
+		if (data === null || !input) return;
+		input.value = JSON.stringify(data, null, 2);
+		setStatus('已格式化。', 'ok');
+	});
+
+	minifyBtn?.addEventListener('click', () => {
+		const data = parseJson();
+		if (data === null || !input) return;
+		input.value = JSON.stringify(data);
+		setStatus('已压缩。', 'ok');
+	});
+
+	copyBtn?.addEventListener('click', async () => {
+		if (!input?.value) {
+			setStatus('没有可复制的内容。', 'error');
+			return;
+		}
+		try {
+			await navigator.clipboard.writeText(input.value);
+			setStatus('已复制到剪贴板。', 'ok');
+		} catch {
+			input.select();
+			setStatus('复制失败，请手动全选后复制。', 'error');
+		}
+	});
+
+	clearBtn?.addEventListener('click', () => {
+		if (input) input.value = '';
+		setStatus('已清空。');
+	});
+</script>

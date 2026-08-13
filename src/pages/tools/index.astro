@@ -1,0 +1,61 @@
+---
+import { SITE_TITLE } from '../../consts';
+import { tools } from '../../data/tools';
+import Page from '../../layouts/Page.astro';
+---
+
+<Page title={`工具 | ${SITE_TITLE}`} description="浏览器里就能用的开发小工具。" wide>
+	<h1>工具</h1>
+	<p class="intro">这些工具都在你的浏览器里运行，不会把内容上传到服务器。</p>
+	<ul class="tool-grid">
+		{
+			tools.map((tool) => (
+				<li>
+					<a href={tool.href}>
+						<h2>{tool.title}</h2>
+						<p>{tool.description}</p>
+					</a>
+				</li>
+			))
+		}
+	</ul>
+</Page>
+
+<style>
+	.intro {
+		color: rgb(var(--gray));
+		margin-bottom: 1.5rem;
+	}
+	.tool-grid {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+		gap: 1rem;
+	}
+	.tool-grid a {
+		display: block;
+		height: 100%;
+		padding: 1.2rem;
+		border: 1px solid rgb(var(--gray-light));
+		border-radius: 12px;
+		background: #fff;
+		text-decoration: none;
+		color: inherit;
+		transition: box-shadow 0.2s ease, border-color 0.2s ease;
+	}
+	.tool-grid a:hover {
+		border-color: var(--accent);
+		box-shadow: var(--box-shadow);
+	}
+	.tool-grid h2 {
+		margin: 0 0 0.5rem;
+		font-size: 1.25rem;
+	}
+	.tool-grid p {
+		margin: 0;
+		color: rgb(var(--gray));
+		font-size: 0.95rem;
+	}
+</style>
