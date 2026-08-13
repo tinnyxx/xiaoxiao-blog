@@ -8,6 +8,18 @@ import { defineConfig, fontProviders } from 'astro/config';
 export default defineConfig({
 	site: 'https://xiaoxiaoptopfile.top',
 	integrations: [mdx(), sitemap()],
+	vite: {
+		server: {
+			proxy: {
+				'/api/bili-userinfo': {
+					target: 'https://uapis.cn',
+					changeOrigin: true,
+					rewrite: (path) =>
+						path.replace(/^\/api\/bili-userinfo/, '/api/v1/social/bilibili/userinfo'),
+				},
+			},
+		},
+	},
 	fonts: [
 		{
 			provider: fontProviders.local(),

@@ -1,0 +1,390 @@
+---
+import { SITE_TITLE } from '../../consts';
+import Page from '../../layouts/Page.astro';
+---
+
+<Page title={`B站关注时间 | ${SITE_TITLE}`} description="查询你关注某位 B 站 UP 主的时间，并展示该 UP 的公开资料。">
+	<p class="back"><a href="/tools">← 全部工具</a></p>
+	<h1>B站关注时间</h1>
+	<p class="intro">
+		先在 <a href="https://www.bilibili.com" target="_blank" rel="noreferrer">B站网页端</a> 登录自己的账号，再输入 UP 主 UID。UP
+		资料来自公开接口；关注时间来自 B 站登录态接口
+		<code>api.bilibili.com/x/space/acc/relation</code>。
+	</p>
+
+	<form id="query-form" class="query">
+		<label for="uid-input">UP 主 UID</label>
+		<div class="row">
+			<input
+				id="uid-input"
+				name="uid"
+				inputmode="numeric"
+				autocomplete="off"
+				maxlength="20"
+				placeholder="例如 431956189"
+				required
+			/>
+			<button type="submit">查询</button>
+		</div>
+		<p id="form-error" class="status" aria-live="polite"></p>
+	</form>
+
+	<section id="profile" class="card hidden"></section>
+	<section id="follow" class="card hidden"></section>
+
+	<section id="fallback" class="card hidden">
+		<h2>关注时间需要登录态</h2>
+		<p>
+			浏览器不允许本站直接读取 B 站 Cookie，所以自动查询可能失败。请确认已登录 B 站，然后打开接口，把返回的
+			JSON 粘贴到下方。
+		</p>
+		<p>
+			<a id="open-api" href="#" target="_blank" rel="noreferrer">打开关注关系接口</a>
+		</p>
+		<label for="json-paste">粘贴接口返回的 JSON</label>
+		<textarea id="json-paste" rows="8" spellcheck="false" placeholder='{"code":0,"message":"OK",...}'></textarea>
+	</section>
+</Page>
+
+<style>
+	.back {
+		margin-bottom: 0.5rem;
+		font-size: 0.95rem;
+	}
+	.intro {
+		color: rgb(var(--gray));
+	}
+	.query label,
+	#fallback label {
+		display: block;
+		margin-bottom: 0.4rem;
+		font-size: 0.95rem;
+	}
+	.row {
+		display: flex;
+		gap: 0.6rem;
+	}
+	input,
+	textarea {
+		box-sizing: border-box;
+		width: 100%;
+		padding: 0.55rem 0.8rem;
+		border: 1px solid rgb(var(--gray-light));
+		border-radius: 10px;
+		font: inherit;
+	}
+	button {
+		border: 0;
+		border-radius: 10px;
+		padding: 0.55rem 1.1rem;
+		background: var(--accent);
+		color: #fff;
+		font: inherit;
+		cursor: pointer;
+		white-space: nowrap;
+	}
+	button:hover {
+		background: var(--accent-dark);
+	}
+	.status {
+		min-height: 1.4em;
+		margin: 0.5rem 0 0;
+		font-size: 0.95rem;
+		color: #b42318;
+	}
+	.card {
+		margin-top: 1.2rem;
+		padding: 1.1rem 1.2rem;
+		border: 1px solid rgb(var(--gray-light));
+		border-radius: 12px;
+		background: #fff;
+	}
+	.hidden {
+		display: none;
+	}
+	.profile-head {
+		display: flex;
+		gap: 1rem;
+		align-items: flex-start;
+	}
+	.profile-head img {
+		width: 88px;
+		height: 88px;
+		border-radius: 50%;
+		object-fit: cover;
+	}
+	.profile-head h2 {
+		margin: 0 0 0.3rem;
+		font-size: 1.4rem;
+	}
+	.sign {
+		margin: 0;
+		color: rgb(var(--gray));
+		font-size: 0.95rem;
+	}
+	.meta {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+		gap: 0.6rem 1rem;
+		margin: 1rem 0 0;
+		padding: 0;
+		list-style: none;
+		font-size: 0.95rem;
+	}
+	.meta span {
+		display: block;
+		color: rgb(var(--gray));
+		font-size: 0.8rem;
+	}
+	.follow-time {
+		font-size: 1.6rem;
+		margin: 0.2rem 0 0.4rem;
+	}
+	.muted {
+		color: rgb(var(--gray));
+		margin: 0;
+	}
+</style>
+
+<script>
+	const UID_RE = /^\d{1,20}$/;
+	const RELATION_API = 'https://api.bilibili.com/x/space/acc/relation?mid=';
+	const USERINFO_API = 'https://uapis.cn/api/v1/social/bilibili/userinfo?uid=';
+
+	const form = document.querySelector<HTMLFormElement>('#query-form');
+	const uidInput = document.querySelector<HTMLInputElement>('#uid-input');
+	const formError = document.querySelector<HTMLParagraphElement>('#form-error');
+	const profileEl = document.querySelector<HTMLElement>('#profile');
+	const followEl = document.querySelector<HTMLElement>('#follow');
+	const fallbackEl = document.querySelector<HTMLElement>('#fallback');
+	const openApi = document.querySelector<HTMLAnchorElement>('#open-api');
+	const jsonPaste = document.querySelector<HTMLTextAreaElement>('#json-paste');
+
+	type RelationPayload = {
+		code?: number;
+		message?: string;
+		data?: {
+			relation?: { mid?: number; attribute?: number; mtime?: number };
+			be_relation?: { attribute?: number };
+		};
+	};
+
+	type UserInfo = {
+		mid?: number;
+		name?: string;
+		sex?: string;
+		face?: string;
+		sign?: string;
+		level?: number;
+		birthday?: string;
+		vip_type?: number;
+		vip_status?: number;
+		following?: number;
+		follower?: number;
+		archive_count?: number;
+		article_count?: number;
+		code?: string;
+		message?: string;
+	};
+
+	function show(el: HTMLElement | null, on: boolean) {
+		el?.classList.toggle('hidden', !on);
+	}
+
+	function escapeHtml(value: string) {
+		return value
+			.replaceAll('&', '&amp;')
+			.replaceAll('<', '&lt;')
+			.replaceAll('>', '&gt;')
+			.replaceAll('"', '&quot;');
+	}
+
+	function formatCount(n: number | undefined) {
+		if (typeof n !== 'number') return '-';
+		if (n >= 10000) return `${(n / 10000).toFixed(1).replace(/\.0$/, '')}万`;
+		return String(n);
+	}
+
+	function vipText(info: UserInfo) {
+		if (info.vip_status !== 1) return '未开通大会员';
+		return info.vip_type === 2 ? '年度大会员' : '大会员';
+	}
+
+	function relationText(attribute: number | undefined) {
+		switch (attribute) {
+			case 1:
+				return '悄悄关注';
+			case 2:
+				return '已关注';
+			case 6:
+				return '互相关注';
+			default:
+				return '未关注';
+		}
+	}
+
+	function formatMtime(mtime: number) {
+		const date = new Date(mtime * 1000);
+		const formatted = date.toLocaleString('zh-CN', {
+			hour12: false,
+			timeZone: 'Asia/Shanghai',
+		});
+		const days = Math.max(0, Math.floor((Date.now() - date.getTime()) / 86400000));
+		const years = Math.floor(days / 365);
+		const months = Math.floor((days % 365) / 30);
+		let relative = '不到 1 天';
+		if (years > 0) relative = `${years} 年 ${months} 个月`;
+		else if (months > 0) relative = `${months} 个月`;
+		else if (days > 0) relative = `${days} 天`;
+		return { formatted, relative };
+	}
+
+	function currentUid() {
+		return uidInput?.value.trim() ?? '';
+	}
+
+	function setApiLink(uid: string) {
+		if (!openApi) return;
+		openApi.href = `${RELATION_API}${uid}`;
+	}
+
+	function renderProfile(info: UserInfo) {
+		if (!profileEl) return;
+		const face = (info.face || '').replace(/^http:\/\//, 'https://');
+		profileEl.innerHTML = `
+			<div class="profile-head">
+				${face ? `<img src="${escapeHtml(face)}" alt="${escapeHtml(info.name || 'UP主')} 的头像">` : ''}
+				<div>
+					<h2>${escapeHtml(info.name || '未知用户')}</h2>
+					<p class="sign">${escapeHtml(info.sign || '这个人没有签名')}</p>
+				</div>
+			</div>
+			<ul class="meta">
+				<li><span>UID</span>${escapeHtml(String(info.mid ?? currentUid()))}</li>
+				<li><span>性别</span>${escapeHtml(info.sex || '-')}</li>
+				<li><span>等级</span>Lv.${escapeHtml(String(info.level ?? '-'))}</li>
+				<li><span>生日</span>${escapeHtml(info.birthday || '-')}</li>
+				<li><span>会员</span>${escapeHtml(vipText(info))}</li>
+				<li><span>关注</span>${formatCount(info.following)}</li>
+				<li><span>粉丝</span>${formatCount(info.follower)}</li>
+				<li><span>投稿</span>${formatCount(info.archive_count)}</li>
+				<li><span>专栏</span>${formatCount(info.article_count)}</li>
+			</ul>
+		`;
+		show(profileEl, true);
+	}
+
+	function renderFollow(payload: RelationPayload) {
+		if (!followEl) return;
+		if (payload.code && payload.code !== 0) {
+			followEl.innerHTML = `<h2>关注时间</h2><p>${escapeHtml(payload.message || '查询失败，请确认已登录 B 站。')}</p>`;
+			show(followEl, true);
+			return;
+		}
+		const relation = payload.data?.relation;
+		const mtime = relation?.mtime ?? 0;
+		if (!mtime) {
+			followEl.innerHTML = `
+				<h2>关注时间</h2>
+				<p class="follow-time">未关注</p>
+				<p class="muted">当前登录账号没有关注这位 UP，或登录态无效。</p>
+			`;
+			show(followEl, true);
+			return;
+		}
+		const { formatted, relative } = formatMtime(mtime);
+		const back = payload.data?.be_relation?.attribute === 2 || payload.data?.be_relation?.attribute === 6;
+		followEl.innerHTML = `
+			<h2>关注时间</h2>
+			<p class="follow-time">${escapeHtml(formatted)}</p>
+			<p class="muted">已关注 ${escapeHtml(relative)} · ${escapeHtml(relationText(relation?.attribute))}${back ? ' · 对方也关注了你' : ''}</p>
+		`;
+		show(followEl, true);
+	}
+
+	async function fetchJson(url: string, credentials: RequestCredentials = 'omit') {
+		const response = await fetch(url, { credentials });
+		if (!response.ok) throw new Error(`HTTP ${response.status}`);
+		return response.json();
+	}
+
+	async function loadUserInfo(uid: string) {
+		const urls = [`/api/bili-userinfo?uid=${uid}`, `${USERINFO_API}${uid}`];
+		let lastError: unknown;
+		for (const url of urls) {
+			try {
+				const data = (await fetchJson(url)) as UserInfo;
+				if (data.code && !data.mid) throw new Error(data.message || '未找到该用户');
+				if (!data.mid && !data.name) throw new Error('返回数据不完整');
+				renderProfile(data);
+				return;
+			} catch (error) {
+				lastError = error;
+			}
+		}
+		if (profileEl) {
+			const message = lastError instanceof Error ? lastError.message : '用户信息查询失败';
+			profileEl.innerHTML = `<h2>UP 主资料</h2><p>${escapeHtml(message)}</p>`;
+			show(profileEl, true);
+		}
+	}
+
+	async function loadRelation(uid: string) {
+		setApiLink(uid);
+		try {
+			const payload = (await fetchJson(`${RELATION_API}${uid}`, 'include')) as RelationPayload;
+			renderFollow(payload);
+			show(fallbackEl, false);
+		} catch {
+			show(followEl, false);
+			show(fallbackEl, true);
+		}
+	}
+
+	async function query(uid: string) {
+		if (formError) formError.textContent = '';
+		await Promise.all([loadUserInfo(uid), loadRelation(uid)]);
+	}
+
+	form?.addEventListener('submit', (event) => {
+		event.preventDefault();
+		const uid = currentUid();
+		if (!UID_RE.test(uid)) {
+			if (formError) formError.textContent = '请输入 1 到 20 位数字 UID。';
+			return;
+		}
+		const next = new URL(location.href);
+		next.searchParams.set('uid', uid);
+		history.replaceState({}, '', next);
+		void query(uid);
+	});
+
+	jsonPaste?.addEventListener('input', () => {
+		const raw = jsonPaste.value.trim();
+		if (!raw) return;
+		try {
+			renderFollow(JSON.parse(raw) as RelationPayload);
+			if (formError) formError.textContent = '';
+		} catch {
+			if (formError) formError.textContent = '粘贴的内容不是合法 JSON。';
+		}
+	});
+
+	const params = new URLSearchParams(location.search);
+	const uidFromQuery = params.get('uid') || '';
+	if (UID_RE.test(uidFromQuery) && uidInput) {
+		uidInput.value = uidFromQuery;
+		setApiLink(uidFromQuery);
+		void query(uidFromQuery);
+	}
+
+	const hash = decodeURIComponent(location.hash.replace(/^#relation=/, ''));
+	if (hash && hash !== location.hash) {
+		try {
+			renderFollow(JSON.parse(hash) as RelationPayload);
+			show(fallbackEl, false);
+		} catch {
+			/* ignore malformed hash */
+		}
+	}
+</script>

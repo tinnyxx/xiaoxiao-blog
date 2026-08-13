@@ -1,0 +1,81 @@
+---
+import { SITE_TITLE } from '../consts';
+import { tools } from '../data/tools';
+import HeaderLink from './HeaderLink.astro';
+---
+
+<aside id="site-sidebar" class="sidebar">
+	<a class="brand" href="/">{SITE_TITLE}</a>
+	<nav>
+		<HeaderLink href="/">首页</HeaderLink>
+		<HeaderLink href="/blog">文章</HeaderLink>
+		<div class="group">
+			<HeaderLink href="/tools">工具</HeaderLink>
+			<div class="sub">
+				{tools.map((tool) => <HeaderLink href={tool.href}>{tool.title}</HeaderLink>)}
+			</div>
+		</div>
+		<HeaderLink href="/about">关于</HeaderLink>
+	</nav>
+</aside>
+
+<style>
+	.sidebar {
+		width: var(--sidebar-width);
+		flex-shrink: 0;
+		box-sizing: border-box;
+		padding: 1.4rem 1rem 2rem;
+		background: #fff;
+		border-right: 1px solid rgb(var(--gray-light));
+		position: sticky;
+		top: 0;
+		height: 100vh;
+		overflow-y: auto;
+	}
+	.brand {
+		display: block;
+		margin: 0 0.75rem 1.4rem;
+		font-weight: 700;
+		color: rgb(var(--black));
+		text-decoration: none;
+	}
+	nav :global(a) {
+		padding: 0.45rem 0.75rem;
+		border-radius: 8px;
+		color: rgb(var(--gray-dark));
+	}
+	nav :global(a:hover) {
+		background: rgba(var(--gray-light), 0.7);
+	}
+	nav :global(a.active) {
+		background: rgb(var(--gray-light));
+		color: var(--accent);
+	}
+	.group {
+		margin: 0.15rem 0;
+	}
+	.sub {
+		margin: 0.15rem 0 0.4rem 0.6rem;
+		padding-left: 0.5rem;
+		border-left: 2px solid rgb(var(--gray-light));
+	}
+	.sub :global(a) {
+		font-size: 0.92rem;
+		padding: 0.3rem 0.7rem;
+		color: rgb(var(--gray));
+	}
+
+	@media (max-width: 860px) {
+		.sidebar {
+			position: fixed;
+			left: 0;
+			z-index: 20;
+			transform: translateX(-100%);
+			transition: transform 0.2s ease;
+			box-shadow: var(--box-shadow);
+		}
+		:global(body.sidebar-open) .sidebar {
+			transform: translateX(0);
+		}
+	}
+</style>

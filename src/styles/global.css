@@ -15,6 +15,7 @@
 	--box-shadow:
 		0 2px 6px rgba(var(--gray), 25%), 0 8px 24px rgba(var(--gray), 33%),
 		0 16px 32px rgba(var(--gray), 33%);
+	--sidebar-width: 240px;
 }
 body {
 	font-family: var(--font-atkinson);
@@ -29,11 +30,32 @@ body {
 	font-size: 20px;
 	line-height: 1.7;
 }
+.site {
+	display: flex;
+	min-height: 100vh;
+	align-items: stretch;
+}
+.site-main {
+	flex: 1;
+	min-width: 0;
+	display: flex;
+	flex-direction: column;
+}
+.mobile-bar {
+	display: none;
+}
+.backdrop {
+	display: none;
+}
 main {
 	width: 720px;
 	max-width: calc(100% - 2em);
 	margin: auto;
 	padding: 3em 1em;
+	flex: 1;
+}
+main.wide {
+	width: 960px;
 }
 h1,
 h2,
@@ -112,6 +134,45 @@ blockquote {
 hr {
 	border: none;
 	border-top: 1px solid rgb(var(--gray-light));
+}
+@media (max-width: 860px) {
+	.mobile-bar {
+		display: flex;
+		align-items: center;
+		gap: 0.8rem;
+		position: sticky;
+		top: 0;
+		z-index: 15;
+		padding: 0.7rem 1rem;
+		background: #fff;
+		border-bottom: 1px solid rgb(var(--gray-light));
+	}
+	.mobile-bar a {
+		font-weight: 700;
+		color: rgb(var(--black));
+		text-decoration: none;
+	}
+	.mobile-bar button {
+		border: 0;
+		border-radius: 8px;
+		padding: 0.3rem 0.7rem;
+		background: rgb(var(--gray-light));
+		color: rgb(var(--gray-dark));
+		font: inherit;
+		cursor: pointer;
+	}
+	.backdrop {
+		display: none;
+		position: fixed;
+		inset: 0;
+		z-index: 19;
+		border: 0;
+		padding: 0;
+		background: rgba(15, 18, 25, 0.35);
+	}
+	body.sidebar-open .backdrop {
+		display: block;
+	}
 }
 @media (max-width: 720px) {
 	body {
