@@ -9,7 +9,14 @@ WEB_DIR="${WEB_DIR:-/var/www/xiaoxiaoptopfile.top}"
 cd "$REPO_DIR"
 
 echo "==> 拉取最新代码"
-git pull --ff-only
+echo "当前提交：$(git rev-parse --short HEAD) $(git log -1 --format=%s)"
+git fetch origin
+if ! git pull --ff-only; then
+  echo "拉取失败：本地有冲突或提交。确认服务器上没有要保留的修改后，执行："
+  echo "  git reset --hard origin/\$(git rev-parse --abbrev-ref HEAD)"
+  exit 1
+fi
+echo "目标提交：$(git rev-parse --short HEAD) $(git log -1 --format=%s)"
 
 echo "==> 安装依赖"
 if ! command -v node >/dev/null; then
@@ -24,12 +31,29 @@ if [ "$NODE_MAJOR" -lt 22 ]; then
 fi
 
 npm ci
+
+echo "==> 构建（先清掉上一次的产物和缓存）"
+rm -rf dist node_modules/.astro
 npm run build
 
 if [ ! -d dist ]; then
   echo "构建失败：没有 dist 目录"
   exit 1
 fi
+
+# 每个页面都必须带上新版界面的标记，避免把半旧的产物发上线。
+echo "==> 校验构建产物"
+for page in "index.html" "blog/index.html" "tools/index.html" "about/index.html"; do
+  if [ ! -f "dist/$page" ]; then
+    echo "缺少页面：dist/$page"
+    exit 1
+  fi
+  if ! grep -q "PERSONAL DIGITAL GARDEN" "dist/$page"; then
+    echo "dist/$page 不是新版界面（缺少侧边栏标记），构建可能用了旧代码"
+    exit 1
+  fi
+done
+echo "共 $(find dist -name '*.html' | wc -l) 个页面，校验通过"
 
 echo "==> 发布到 $WEB_DIR"
 mkdir -p "$WEB_DIR"
@@ -41,3 +65,5 @@ if command -v nginx >/dev/null; then
 fi
 
 echo "发布完成：https://xiaoxiaoptopfile.top"
+echo "已发布提交：$(git rev-parse --short HEAD)"
+echo "如果浏览器里还是旧界面，按 Ctrl+Shift+R 强制刷新一次。"
