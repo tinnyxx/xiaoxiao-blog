@@ -48,7 +48,8 @@ for page in "index.html" "blog/index.html" "tools/index.html" "about/index.html"
     echo "缺少页面：dist/$page"
     exit 1
   fi
-  if ! grep -q "PERSONAL DIGITAL GARDEN" "dist/$page"; then
+  # -i：页面里是 "Personal digital garden"，大写是 CSS text-transform 的效果。
+  if ! grep -qi "personal digital garden" "dist/$page"; then
     echo "dist/$page 不是新版界面（缺少侧边栏标记），构建可能用了旧代码"
     exit 1
   fi
