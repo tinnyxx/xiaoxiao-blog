@@ -1,0 +1,15 @@
+<button id="back-to-top" class="back-to-top glass" type="button" aria-label="返回顶部">↑</button>
+
+<script>
+	const button = document.querySelector<HTMLButtonElement>('#back-to-top');
+	if (button && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+		const onScroll = () => {
+			button.classList.toggle('is-visible', window.scrollY > 360);
+		};
+		window.addEventListener('scroll', onScroll, { passive: true });
+		onScroll();
+		button.addEventListener('click', () => {
+			window.scrollTo({ top: 0, behavior: 'smooth' });
+		});
+	}
+</script>

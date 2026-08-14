@@ -1,0 +1,33 @@
+<div class="ambient" aria-hidden="true">
+	<div class="ambient-glow ambient-glow-a" data-glow></div>
+	<div class="ambient-glow ambient-glow-b" data-glow></div>
+</div>
+
+<script>
+	const glows = document.querySelectorAll<HTMLElement>('[data-glow]');
+	const finePointer = window.matchMedia('(pointer: fine)').matches;
+	const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+	if (finePointer && !reduceMotion && glows.length) {
+		let x = -9999;
+		let y = -9999;
+		let frame = 0;
+
+		const paint = () => {
+			frame = 0;
+			for (const glow of glows) {
+				glow.style.transform = `translate(${x}px, ${y}px)`;
+			}
+		};
+
+		window.addEventListener(
+			'mousemove',
+			(event) => {
+				x = event.clientX;
+				y = event.clientY;
+				if (!frame) frame = requestAnimationFrame(paint);
+			},
+			{ passive: true },
+		);
+	}
+</script>

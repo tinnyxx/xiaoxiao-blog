@@ -28,7 +28,8 @@ const posts = (await getCollection('blog'))
 			{
 				posts.map((post) => (
 					<li>
-						<a href={`/blog/${post.id}/`}>
+						<a class="card" href={`/blog/${post.id}/`}>
+							<span class="dot" aria-hidden="true"></span>
 							<h3>{post.data.title}</h3>
 							<p>{post.data.description}</p>
 							<time>
@@ -50,7 +51,8 @@ const posts = (await getCollection('blog'))
 			{
 				tools.map((tool) => (
 					<li>
-						<a href={tool.href}>
+						<a class="card" href={tool.href}>
+							<span class="dot" aria-hidden="true"></span>
 							<h3>{tool.title}</h3>
 							<p>{tool.description}</p>
 						</a>
@@ -96,19 +98,11 @@ const posts = (await getCollection('blog'))
 	}
 	.post-list a,
 	.tool-grid a {
-		display: block;
-		padding: 1.1rem 1.2rem;
-		border: 1px solid rgb(var(--gray-light));
-		border-radius: 12px;
-		background: #fff;
-		text-decoration: none;
-		color: inherit;
-		transition: box-shadow 0.2s ease, border-color 0.2s ease;
+		padding: 1.1rem 1.8rem 1.1rem 1.2rem;
 	}
 	.post-list a:hover,
 	.tool-grid a:hover {
-		border-color: var(--accent);
-		box-shadow: var(--box-shadow);
+		color: inherit;
 	}
 	.post-list h3,
 	.tool-grid h3 {

@@ -11,7 +11,8 @@ import Page from '../../layouts/Page.astro';
 		{
 			tools.map((tool) => (
 				<li>
-					<a href={tool.href}>
+					<a class="card" href={tool.href}>
+						<span class="dot" aria-hidden="true"></span>
 						<h2>{tool.title}</h2>
 						<p>{tool.description}</p>
 					</a>
@@ -35,19 +36,11 @@ import Page from '../../layouts/Page.astro';
 		gap: 1rem;
 	}
 	.tool-grid a {
-		display: block;
 		height: 100%;
-		padding: 1.2rem;
-		border: 1px solid rgb(var(--gray-light));
-		border-radius: 12px;
-		background: #fff;
-		text-decoration: none;
-		color: inherit;
-		transition: box-shadow 0.2s ease, border-color 0.2s ease;
+		padding: 1.2rem 1.8rem 1.2rem 1.2rem;
 	}
 	.tool-grid a:hover {
-		border-color: var(--accent);
-		box-shadow: var(--box-shadow);
+		color: inherit;
 	}
 	.tool-grid h2 {
 		margin: 0 0 0.5rem;

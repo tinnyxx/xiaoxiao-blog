@@ -4,7 +4,7 @@ import { tools } from '../data/tools';
 import HeaderLink from './HeaderLink.astro';
 ---
 
-<aside id="site-sidebar" class="sidebar">
+<aside id="site-sidebar" class="sidebar glass">
 	<a class="brand" href="/">{SITE_TITLE}</a>
 	<nav>
 		<HeaderLink href="/">首页</HeaderLink>
@@ -25,12 +25,12 @@ import HeaderLink from './HeaderLink.astro';
 		flex-shrink: 0;
 		box-sizing: border-box;
 		padding: 1.4rem 1rem 2rem;
-		background: #fff;
-		border-right: 1px solid rgb(var(--gray-light));
+		border-right: 1px solid rgba(255, 255, 255, 0.4);
 		position: sticky;
 		top: 0;
 		height: 100vh;
 		overflow-y: auto;
+		z-index: 10;
 	}
 	.brand {
 		display: block;
