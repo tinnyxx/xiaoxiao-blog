@@ -1,0 +1,873 @@
+---
+import { SITE_TITLE } from '../../consts';
+import Page from '../../layouts/Page.astro';
+---
+
+<Page
+	title={`Website Speed Lab | ${SITE_TITLE}`}
+	description="把网站加载过程变成一场可视化的性能探测。DNS、TCP、TLS、TTFB、DOM、Load，以及综合评分。"
+	wide
+>
+	<header class="page-head">
+		<a class="back mono" href="/tools">
+			<span aria-hidden="true">←</span> Utilities
+		</a>
+	</header>
+
+	<div class="speed-lab" id="speed-lab" data-mode="idle">
+		<div class="orb orb-a" aria-hidden="true"></div>
+		<div class="orb orb-b" aria-hidden="true"></div>
+		<div class="grid" aria-hidden="true"></div>
+		<div class="scanline" aria-hidden="true"></div>
+		<div class="corners" aria-hidden="true">
+			<span></span><span></span><span></span><span></span>
+		</div>
+
+		<p class="kicker mono">Lab / 04 · Network Monitor</p>
+		<h1>Website Speed Lab</h1>
+		<p class="lede-en mono">Turn a page load into a live telemetry trace.</p>
+
+		<form class="console" data-form>
+			<label class="sr-only" for="lab-url">网站 URL</label>
+			<input
+				id="lab-url"
+				data-url
+				type="text"
+				inputmode="url"
+				autocomplete="url"
+				spellcheck="false"
+				placeholder="输入网站 URL"
+			/>
+			<button class="cta" type="submit">开始检测</button>
+			<button class="cta ghost" type="button" data-action="page">当前页面</button>
+			<button class="cta ghost" type="button" data-action="demo">实验室样本</button>
+		</form>
+		<p class="error" data-error hidden></p>
+
+		<section class="panel idle" data-panel="idle">
+			<p class="lede">
+				探测在你的浏览器里发起。当前页可以读到完整 Navigation Timing；第三方站点若未开放
+				<code>Timing-Allow-Origin</code>，阶段会被清零——我们不会用假数据填上，只会标明缺失，并提供完整仪表盘的实验室样本。
+			</p>
+		</section>
+
+		<section class="panel scan" data-panel="scan" hidden>
+			<div class="scan-grid">
+				<div class="radar" aria-hidden="true">
+					<span class="radar-sweep"></span>
+					<span class="radar-ping"></span>
+				</div>
+				<div>
+					<p class="kicker mono">Scanning</p>
+					<div class="chips">
+						<span class="chip" data-chip>DNS</span>
+						<span class="chip" data-chip>TCP</span>
+						<span class="chip" data-chip>TLS</span>
+						<span class="chip" data-chip>TTFB</span>
+						<span class="chip" data-chip>DOM</span>
+						<span class="chip" data-chip>LOAD</span>
+					</div>
+					<div class="term" data-scan-log></div>
+				</div>
+			</div>
+		</section>
+
+		<section class="panel result" data-panel="result" data-result hidden>
+			<div class="hero">
+				<div class="gauge-wrap">
+					<svg class="gauge" viewBox="0 0 140 140" aria-hidden="true">
+						<circle class="gauge-track" cx="70" cy="70" r="54"></circle>
+						<circle class="gauge-fill" data-gauge-fill cx="70" cy="70" r="54"></circle>
+					</svg>
+					<div class="gauge-read">
+						<p class="score mono" data-score>0</p>
+						<p class="over mono">/ 100</p>
+					</div>
+				</div>
+				<div class="hero-copy">
+					<p class="source mono" data-source data-kind="live">LIVE</p>
+					<p class="host" data-host></p>
+					<p class="grade"><span data-grade></span> · <span data-grade-zh></span></p>
+					<p class="headline" data-headline></p>
+					<p class="total-line">
+						<span class="kicker mono">Total</span>
+						<span class="total mono" data-total>—</span>
+					</p>
+				</div>
+			</div>
+			<p class="detail" data-detail></p>
+			<div class="tiles" data-tiles></div>
+			<div class="board">
+				<p class="kicker mono">Waterfall</p>
+				<div class="waterfall" data-waterfall></div>
+			</div>
+			<div class="board notes-board">
+				<p class="kicker mono">Readout</p>
+				<ul class="notes" data-notes></ul>
+			</div>
+			<div class="actions">
+				<button class="cta ghost" type="button" data-action="retry">重新检测</button>
+				<button class="cta" type="button" data-action="copy">复制检测结果</button>
+			</div>
+			<p class="hint mono" data-copy-status></p>
+		</section>
+	</div>
+</Page>
+
+<style>
+	.page-head {
+		margin-bottom: 1.1rem;
+		animation: rise 0.55s var(--ease) both;
+	}
+
+	.back {
+		display: inline-block;
+		font-size: 0.63rem;
+		letter-spacing: 0.16em;
+		text-transform: uppercase;
+		color: var(--muted);
+		text-decoration: none;
+	}
+
+	.back span {
+		display: inline-block;
+		transition: transform 0.25s var(--ease);
+	}
+
+	.back:hover {
+		color: var(--accent);
+	}
+
+	.back:hover span {
+		transform: translateX(-3px);
+	}
+
+	:global(.speed-lab) {
+		--lab-bg: #070b14;
+		--lab-text: #e7eefc;
+		--lab-muted: #8b97b0;
+		--lab-line: rgba(231, 238, 252, 0.1);
+		--lab-cyan: #5ce1e6;
+		--lab-blue: #6d8cff;
+		--lab-deep: #3b5bd0;
+		--lab-gold: #e2b657;
+		--lab-warn: #d97757;
+		--lab-glass: rgba(10, 16, 28, 0.62);
+		--lab-ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+		position: relative;
+		isolation: isolate;
+		overflow: hidden;
+		min-height: 36rem;
+		padding: 2rem 1.6rem 1.8rem;
+		border: 1px solid rgba(92, 225, 230, 0.18);
+		border-radius: 18px;
+		background:
+			radial-gradient(80% 60% at 100% 0%, rgba(92, 225, 230, 0.12), transparent 58%),
+			radial-gradient(70% 50% at 0% 100%, rgba(59, 91, 208, 0.22), transparent 62%),
+			var(--lab-bg);
+		color: var(--lab-text);
+		box-shadow:
+			0 0 0 1px rgba(255, 255, 255, 0.03) inset,
+			0 28px 80px rgba(20, 22, 26, 0.2);
+	}
+
+	:global(.speed-lab .grid),
+	:global(.speed-lab .orb),
+	:global(.speed-lab .scanline) {
+		position: absolute;
+		inset: 0;
+		pointer-events: none;
+	}
+
+	:global(.speed-lab .grid) {
+		z-index: 0;
+		background-image:
+			linear-gradient(to right, rgba(92, 225, 230, 0.05) 1px, transparent 1px),
+			linear-gradient(to bottom, rgba(92, 225, 230, 0.05) 1px, transparent 1px);
+		background-size: 28px 28px;
+		mask-image: radial-gradient(120% 90% at 50% 30%, #000 10%, transparent 78%);
+		-webkit-mask-image: radial-gradient(120% 90% at 50% 30%, #000 10%, transparent 78%);
+	}
+
+	:global(.speed-lab .orb) {
+		filter: blur(42px);
+		opacity: 0.75;
+	}
+
+	:global(.speed-lab .orb-a) {
+		width: 240px;
+		height: 240px;
+		top: -90px;
+		right: -50px;
+		left: auto;
+		background: rgba(92, 225, 230, 0.28);
+	}
+
+	:global(.speed-lab .orb-b) {
+		width: 200px;
+		height: 200px;
+		left: -60px;
+		bottom: -70px;
+		top: auto;
+		right: auto;
+		background: rgba(59, 91, 208, 0.4);
+	}
+
+	:global(.speed-lab .scanline) {
+		z-index: 2;
+		background: linear-gradient(to bottom, transparent, rgba(92, 225, 230, 0.18), transparent);
+		height: 18%;
+		opacity: 0;
+	}
+
+	:global(.speed-lab[data-mode='scan'] .scanline) {
+		opacity: 1;
+		animation: scan-y 2.2s linear infinite;
+	}
+
+	@keyframes scan-y {
+		from {
+			transform: translateY(-40%);
+		}
+		to {
+			transform: translateY(420%);
+		}
+	}
+
+	:global(.speed-lab .corners) {
+		position: absolute;
+		inset: 12px;
+		z-index: 2;
+		pointer-events: none;
+	}
+
+	:global(.speed-lab .corners span) {
+		position: absolute;
+		width: 14px;
+		height: 14px;
+		border: 1px solid rgba(92, 225, 230, 0.55);
+	}
+
+	:global(.speed-lab .corners span:nth-child(1)) {
+		top: 0;
+		left: 0;
+		border-right: 0;
+		border-bottom: 0;
+	}
+
+	:global(.speed-lab .corners span:nth-child(2)) {
+		top: 0;
+		right: 0;
+		border-left: 0;
+		border-bottom: 0;
+	}
+
+	:global(.speed-lab .corners span:nth-child(3)) {
+		bottom: 0;
+		left: 0;
+		border-right: 0;
+		border-top: 0;
+	}
+
+	:global(.speed-lab .corners span:nth-child(4)) {
+		right: 0;
+		bottom: 0;
+		border-left: 0;
+		border-top: 0;
+	}
+
+	:global(.speed-lab > .kicker),
+	:global(.speed-lab > h1),
+	:global(.speed-lab > .lede-en),
+	:global(.speed-lab .console),
+	:global(.speed-lab .error),
+	:global(.speed-lab .panel) {
+		position: relative;
+		z-index: 1;
+	}
+
+	:global(.speed-lab .kicker) {
+		margin: 0 0 0.85rem;
+		font-size: 0.63rem;
+		letter-spacing: 0.18em;
+		text-transform: uppercase;
+		color: var(--lab-cyan);
+	}
+
+	:global(.speed-lab h1) {
+		margin: 0;
+		color: var(--lab-text);
+		font-size: clamp(2rem, 5vw, 3rem);
+		font-weight: 800;
+		letter-spacing: -0.04em;
+	}
+
+	:global(.speed-lab .lede-en) {
+		margin: 0.7rem 0 0;
+		font-size: 0.7rem;
+		letter-spacing: 0.14em;
+		text-transform: uppercase;
+		color: var(--lab-muted);
+	}
+
+	:global(.speed-lab .lede) {
+		margin: 0;
+		max-width: 58ch;
+		color: #c5d0e6;
+		font-size: 0.95rem;
+		line-height: 1.75;
+	}
+
+	:global(.speed-lab .lede code) {
+		border-color: rgba(92, 225, 230, 0.2);
+		background: rgba(7, 11, 20, 0.6);
+		color: var(--lab-cyan);
+		font-size: 0.82em;
+	}
+
+	:global(.speed-lab .console) {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) auto auto auto;
+		gap: 0.5rem;
+		margin: 1.6rem 0 0.6rem;
+	}
+
+	:global(.speed-lab input) {
+		width: 100%;
+		padding: 0.72rem 0.9rem;
+		border: 1px solid var(--lab-line);
+		border-radius: 4px;
+		background: rgba(255, 255, 255, 0.03);
+		color: var(--lab-text);
+		font-family: var(--font-mono);
+		font-size: 0.86rem;
+		transition: border-color 0.2s var(--lab-ease);
+	}
+
+	:global(.speed-lab input:focus) {
+		outline: none;
+		border-color: rgba(92, 225, 230, 0.6);
+		box-shadow: 0 0 0 3px rgba(92, 225, 230, 0.12);
+	}
+
+	:global(.speed-lab .cta) {
+		padding: 0.72rem 1.05rem;
+		border: 1px solid var(--lab-deep);
+		border-radius: 3px;
+		background: var(--lab-deep);
+		color: #fff;
+		font-family: var(--font-mono);
+		font-size: 0.74rem;
+		letter-spacing: 0.06em;
+		white-space: nowrap;
+		cursor: pointer;
+		box-shadow: 0 0 24px rgba(59, 91, 208, 0.35);
+		transition:
+			background-color 0.2s var(--lab-ease),
+			border-color 0.2s var(--lab-ease),
+			transform 0.15s var(--lab-ease);
+	}
+
+	:global(.speed-lab .cta:hover) {
+		background: #4d6de0;
+		border-color: #4d6de0;
+	}
+
+	:global(.speed-lab .cta:active) {
+		transform: translateY(1px);
+	}
+
+	:global(.speed-lab .cta.ghost) {
+		background: transparent;
+		border-color: var(--lab-line);
+		color: var(--lab-text);
+		box-shadow: none;
+	}
+
+	:global(.speed-lab .cta.ghost:hover) {
+		border-color: var(--lab-cyan);
+		color: var(--lab-cyan);
+		background: transparent;
+	}
+
+	:global(.speed-lab .error) {
+		min-height: 1.2em;
+		margin: 0 0 0.8rem;
+		color: var(--lab-warn);
+		font-size: 0.85rem;
+	}
+
+	:global(.speed-lab .panel) {
+		margin-top: 0.6rem;
+	}
+
+	:global(.speed-lab .panel.idle) {
+		padding-top: 0.4rem;
+	}
+
+	:global(.speed-lab .scan-grid) {
+		display: grid;
+		grid-template-columns: 160px minmax(0, 1fr);
+		gap: 1.4rem;
+		align-items: center;
+		padding: 1.2rem;
+		border: 1px solid var(--lab-line);
+		border-radius: 12px;
+		background: var(--lab-glass);
+		backdrop-filter: blur(16px) saturate(140%);
+		-webkit-backdrop-filter: blur(16px) saturate(140%);
+	}
+
+	:global(.speed-lab .radar) {
+		position: relative;
+		width: 148px;
+		height: 148px;
+		border-radius: 50%;
+		border: 1px solid rgba(92, 225, 230, 0.35);
+		background:
+			repeating-radial-gradient(circle at center, rgba(92, 225, 230, 0.16) 0 1px, transparent 1px 24px),
+			rgba(5, 10, 18, 0.7);
+		overflow: hidden;
+		box-shadow: 0 0 28px rgba(92, 225, 230, 0.18) inset;
+	}
+
+	:global(.speed-lab .radar-sweep) {
+		position: absolute;
+		inset: 8%;
+		border-radius: 50%;
+		background: conic-gradient(from 0deg, transparent 0 78%, rgba(92, 225, 230, 0.55) 100%);
+		animation: sweep 1.6s linear infinite;
+	}
+
+	:global(.speed-lab .radar-ping) {
+		position: absolute;
+		inset: 42%;
+		border-radius: 50%;
+		background: var(--lab-cyan);
+		box-shadow: 0 0 16px var(--lab-cyan);
+		animation: ping 1.6s var(--lab-ease) infinite;
+	}
+
+	@keyframes sweep {
+		to {
+			transform: rotate(360deg);
+		}
+	}
+
+	@keyframes ping {
+		0%,
+		100% {
+			transform: scale(0.7);
+			opacity: 1;
+		}
+		50% {
+			transform: scale(1.15);
+			opacity: 0.45;
+		}
+	}
+
+	:global(.speed-lab .chips) {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.4rem;
+		margin-bottom: 0.9rem;
+	}
+
+	:global(.speed-lab .chip) {
+		padding: 0.18rem 0.5rem;
+		border: 1px solid var(--lab-line);
+		border-radius: 99px;
+		font-family: var(--font-mono);
+		font-size: 0.58rem;
+		letter-spacing: 0.12em;
+		color: var(--lab-muted);
+		transition:
+			color 0.25s var(--lab-ease),
+			border-color 0.25s var(--lab-ease),
+			box-shadow 0.25s var(--lab-ease);
+	}
+
+	:global(.speed-lab .chip.is-live) {
+		color: var(--lab-cyan);
+		border-color: rgba(92, 225, 230, 0.55);
+		box-shadow: 0 0 16px rgba(92, 225, 230, 0.25);
+	}
+
+	:global(.speed-lab .term) {
+		min-height: 8.5rem;
+		padding: 0.9rem 1rem;
+		border: 1px solid var(--lab-line);
+		border-radius: 8px;
+		background: rgba(4, 8, 14, 0.55);
+		font-family: var(--font-mono);
+		font-size: 0.74rem;
+		line-height: 1.75;
+		color: #c5d0e6;
+	}
+
+	:global(.speed-lab .term-line:last-child::after) {
+		content: '▍';
+		margin-left: 0.15em;
+		color: var(--lab-cyan);
+		animation: caret 1s step-end infinite;
+	}
+
+	@keyframes caret {
+		50% {
+			opacity: 0;
+		}
+	}
+
+	:global(.speed-lab .hero) {
+		display: grid;
+		grid-template-columns: 168px minmax(0, 1fr);
+		gap: 1.2rem 1.6rem;
+		align-items: center;
+		padding: 1.2rem 1.3rem;
+		border: 1px solid var(--lab-line);
+		border-radius: 12px;
+		background: var(--lab-glass);
+		backdrop-filter: blur(16px) saturate(140%);
+		-webkit-backdrop-filter: blur(16px) saturate(140%);
+	}
+
+	:global(.speed-lab .result.is-reveal .hero) {
+		animation: seal-in 0.7s var(--lab-ease) both;
+	}
+
+	@keyframes seal-in {
+		from {
+			opacity: 0;
+			filter: blur(8px);
+			transform: translateY(12px);
+		}
+		to {
+			opacity: 1;
+			filter: none;
+			transform: none;
+		}
+	}
+
+	:global(.speed-lab .gauge-wrap) {
+		position: relative;
+		width: 168px;
+		height: 168px;
+	}
+
+	:global(.speed-lab .gauge) {
+		width: 100%;
+		height: 100%;
+		transform: rotate(-90deg);
+	}
+
+	:global(.speed-lab .gauge-track),
+	:global(.speed-lab .gauge-fill) {
+		fill: none;
+		stroke-width: 8;
+	}
+
+	:global(.speed-lab .gauge-track) {
+		stroke: rgba(231, 238, 252, 0.1);
+	}
+
+	:global(.speed-lab .gauge-fill) {
+		stroke: var(--lab-cyan);
+		stroke-linecap: round;
+		filter: drop-shadow(0 0 8px rgba(92, 225, 230, 0.7));
+		transition: stroke 0.4s var(--lab-ease);
+	}
+
+	:global(.speed-lab .gauge-read) {
+		position: absolute;
+		inset: 0;
+		display: grid;
+		place-content: center;
+		text-align: center;
+	}
+
+	:global(.speed-lab .score) {
+		margin: 0;
+		font-size: 2.4rem;
+		font-weight: 700;
+		letter-spacing: -0.04em;
+		line-height: 1;
+	}
+
+	:global(.speed-lab .over) {
+		margin: 0.2rem 0 0;
+		font-size: 0.62rem;
+		letter-spacing: 0.16em;
+		color: var(--lab-muted);
+	}
+
+	:global(.speed-lab .source) {
+		display: inline-block;
+		margin: 0 0 0.45rem;
+		padding: 0.16rem 0.5rem;
+		border: 1px solid rgba(92, 225, 230, 0.4);
+		border-radius: 99px;
+		font-size: 0.58rem;
+		letter-spacing: 0.16em;
+		color: var(--lab-cyan);
+	}
+
+	:global(.speed-lab .source[data-kind='demo']) {
+		border-color: rgba(226, 182, 87, 0.5);
+		color: var(--lab-gold);
+	}
+
+	:global(.speed-lab .host) {
+		margin: 0;
+		font-size: 1.35rem;
+		font-weight: 700;
+		letter-spacing: -0.03em;
+		word-break: break-all;
+	}
+
+	:global(.speed-lab .grade) {
+		margin: 0.35rem 0 0;
+		color: var(--lab-blue);
+		font-size: 0.95rem;
+	}
+
+	:global(.speed-lab .headline) {
+		margin: 0.55rem 0 0;
+		color: #c5d0e6;
+		font-size: 0.95rem;
+		line-height: 1.6;
+	}
+
+	:global(.speed-lab .total-line) {
+		display: flex;
+		align-items: baseline;
+		gap: 0.7rem;
+		margin: 0.9rem 0 0;
+	}
+
+	:global(.speed-lab .total-line .kicker) {
+		margin: 0;
+	}
+
+	:global(.speed-lab .total) {
+		font-size: 1.35rem;
+		color: var(--lab-text);
+	}
+
+	:global(.speed-lab .detail) {
+		margin: 0.9rem 0 0;
+		color: var(--lab-muted);
+		font-size: 0.82rem;
+		line-height: 1.65;
+	}
+
+	:global(.speed-lab .tiles) {
+		display: grid;
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+		gap: 0.7rem;
+		margin-top: 1.1rem;
+	}
+
+	:global(.speed-lab .tile) {
+		padding: 0.9rem 0.95rem 0.85rem;
+		border: 1px solid var(--lab-line);
+		border-radius: 10px;
+		background: rgba(10, 16, 28, 0.55);
+		animation: tile-in 0.5s var(--lab-ease) both;
+		animation-delay: calc(var(--i, 0) * 60ms);
+	}
+
+	:global(.speed-lab .tile h3) {
+		margin: 0;
+		color: var(--lab-text);
+		font-size: 0.95rem;
+	}
+
+	:global(.speed-lab .tile .kicker) {
+		margin-bottom: 0.35rem;
+		color: var(--lab-muted);
+	}
+
+	:global(.speed-lab .tile-val) {
+		margin: 0.45rem 0 0;
+		color: var(--lab-cyan);
+		font-size: 1.15rem;
+	}
+
+	:global(.speed-lab .tile.is-void .tile-val) {
+		color: var(--lab-muted);
+	}
+
+	@keyframes tile-in {
+		from {
+			opacity: 0;
+			transform: translateY(8px);
+		}
+		to {
+			opacity: 1;
+			transform: none;
+		}
+	}
+
+	:global(.speed-lab .board) {
+		margin-top: 1.1rem;
+		padding: 1.1rem 1.15rem;
+		border: 1px solid var(--lab-line);
+		border-radius: 12px;
+		background: var(--lab-glass);
+		backdrop-filter: blur(16px) saturate(140%);
+		-webkit-backdrop-filter: blur(16px) saturate(140%);
+	}
+
+	:global(.speed-lab .wf-row) {
+		display: grid;
+		grid-template-columns: 3.2rem minmax(0, 1fr) 4.6rem;
+		gap: 0.7rem;
+		align-items: center;
+		margin-top: 0.55rem;
+	}
+
+	:global(.speed-lab .wf-name),
+	:global(.speed-lab .wf-ms) {
+		font-size: 0.68rem;
+		letter-spacing: 0.08em;
+		color: var(--lab-muted);
+	}
+
+	:global(.speed-lab .wf-ms) {
+		text-align: right;
+		color: var(--lab-text);
+	}
+
+	:global(.speed-lab .wf-track) {
+		position: relative;
+		height: 10px;
+		overflow: hidden;
+		border-radius: 99px;
+		background: rgba(231, 238, 252, 0.06);
+	}
+
+	:global(.speed-lab .wf-bar) {
+		position: absolute;
+		top: 0;
+		height: 100%;
+		border-radius: inherit;
+		background: linear-gradient(90deg, var(--lab-deep), var(--lab-cyan));
+		box-shadow: 0 0 12px rgba(92, 225, 230, 0.35);
+		transform-origin: left center;
+		animation: bar-in 0.8s var(--lab-ease) both;
+	}
+
+	:global(.speed-lab .wf-row.is-void .wf-bar) {
+		display: none;
+	}
+
+	:global(.speed-lab .wf-row.is-void .wf-ms) {
+		color: var(--lab-muted);
+	}
+
+	@keyframes bar-in {
+		from {
+			transform: scaleX(0);
+		}
+		to {
+			transform: none;
+		}
+	}
+
+	:global(.speed-lab .notes) {
+		margin: 0;
+		padding-left: 1.1rem;
+		color: #c5d0e6;
+		font-size: 0.92rem;
+		line-height: 1.7;
+	}
+
+	:global(.speed-lab .notes li + li) {
+		margin-top: 0.35rem;
+	}
+
+	:global(.speed-lab .actions) {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.55rem;
+		margin-top: 1.2rem;
+	}
+
+	:global(.speed-lab .hint) {
+		min-height: 1.2em;
+		margin: 0.7rem 0 0;
+		font-size: 0.62rem;
+		letter-spacing: 0.14em;
+		text-transform: uppercase;
+		color: var(--lab-muted);
+	}
+
+	@media (max-width: 900px) {
+		:global(.speed-lab .console) {
+			grid-template-columns: 1fr 1fr;
+		}
+
+		:global(.speed-lab .console input) {
+			grid-column: 1 / -1;
+		}
+
+		:global(.speed-lab .console .cta:first-of-type) {
+			grid-column: 1 / -1;
+		}
+	}
+
+	@media (max-width: 767px) {
+		:global(.speed-lab) {
+			padding: 1.4rem 1rem 1.2rem;
+			border-radius: 14px;
+		}
+
+		:global(.speed-lab .scan-grid),
+		:global(.speed-lab .hero),
+		:global(.speed-lab .tiles) {
+			grid-template-columns: 1fr;
+		}
+
+		:global(.speed-lab .radar) {
+			margin: 0 auto;
+		}
+
+		:global(.speed-lab .gauge-wrap) {
+			margin: 0 auto;
+		}
+
+		:global(.speed-lab .tiles) {
+			grid-template-columns: 1fr 1fr;
+		}
+
+		:global(.speed-lab .actions) {
+			flex-direction: column;
+		}
+
+		:global(.speed-lab .cta) {
+			width: 100%;
+			text-align: center;
+		}
+
+		:global(.speed-lab .wf-row) {
+			grid-template-columns: 2.6rem minmax(0, 1fr) 3.8rem;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		:global(.speed-lab .scanline),
+		:global(.speed-lab .radar-sweep),
+		:global(.speed-lab .radar-ping),
+		:global(.speed-lab .wf-bar),
+		:global(.speed-lab .tile) {
+			animation: none;
+		}
+	}
+</style>
+
+<script>
+	import { mountSpeedLab } from '../../scripts/speed-lab';
+
+	const root = document.getElementById('speed-lab');
+	if (root) mountSpeedLab(root);
+</script>

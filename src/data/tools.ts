@@ -26,4 +26,20 @@ export const tools: Tool[] = [
 		label: 'Bilibili Follow',
 		glyph: '◷',
 	},
+	{
+		id: 'dev-persona',
+		title: '程序员人格测试',
+		description: '十道题，编译出一种程序员人格。有梗，但认真。',
+		href: '/tools/dev-persona',
+		label: 'Persona Test',
+		glyph: '☽',
+	},
+	{
+		id: 'speed-lab',
+		title: 'Website Speed Lab',
+		description: '把一次网站加载画成带评分的性能时间轴。能测则测，不能测就标明。',
+		href: '/tools/speed-lab',
+		label: 'Speed Lab',
+		glyph: '⌁',
+	},
 ];
