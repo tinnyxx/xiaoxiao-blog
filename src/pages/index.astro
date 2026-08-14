@@ -1,125 +1,304 @@
 ---
 import { getCollection } from 'astro:content';
-import FormattedDate from '../components/FormattedDate.astro';
+import BuildingPanel from '../components/BuildingPanel.astro';
+import GardenMark from '../components/GardenMark.astro';
+import NoteEntry from '../components/NoteEntry.astro';
+import UtilityShelf from '../components/UtilityShelf.astro';
 import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
-import { tools } from '../data/tools';
 import Page from '../layouts/Page.astro';
 
-const posts = (await getCollection('blog'))
-	.sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
-	.slice(0, 3);
+const allPosts = (await getCollection('blog')).sort(
+	(a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
+);
+const posts = allPosts.slice(0, 4);
+const year = new Date().getFullYear();
+
+const identity = [
+	{ label: 'Building', value: 'AI · Web · Tools' },
+	{ label: 'Writing', value: 'Notes & Experiments' },
+	{ label: 'Location', value: 'China' },
+	{ label: 'Year', value: String(year) },
+];
 ---
 
 <Page title={SITE_TITLE} description={SITE_DESCRIPTION} wide>
-	<section class="hero">
-		<p class="eyebrow">xiaoxiaoptopfile.top</p>
-		<h1>小小博客</h1>
-		<p class="lead">
-			这里放开发笔记，也放我自己做的小工具。文章用 Markdown 写，工具都在浏览器里运行。
-		</p>
-	</section>
-
-	<section>
-		<div class="section-head">
-			<h2>最新文章</h2>
-			<a href="/blog">全部文章 →</a>
+	<header class="hero">
+		<div class="hero-text">
+			<p class="domain mono">
+				<span>xiaoxiaoptopfile.top</span>
+				<span class="slash" aria-hidden="true">/</span>
+				<span>Personal space · {year}</span>
+			</p>
+			<h1>{SITE_TITLE}</h1>
+			<p class="lead">一个人的<br />代码、想法与实验。</p>
+			<p class="lead-en mono">A small place for code, ideas &amp; experiments.</p>
 		</div>
-		<ul class="post-list">
-			{
-				posts.map((post) => (
-					<li>
-						<a class="card" href={`/blog/${post.id}/`}>
-							<span class="dot" aria-hidden="true"></span>
-							<h3>{post.data.title}</h3>
-							<p>{post.data.description}</p>
-							<time>
-								<FormattedDate date={post.data.pubDate} />
-							</time>
-						</a>
-					</li>
-				))
-			}
-		</ul>
-	</section>
-
-	<section>
-		<div class="section-head">
-			<h2>在线工具</h2>
-			<a href="/tools">全部工具 →</a>
+		<div class="hero-mark">
+			<GardenMark />
 		</div>
-		<ul class="tool-grid">
-			{
-				tools.map((tool) => (
-					<li>
-						<a class="card" href={tool.href}>
-							<span class="dot" aria-hidden="true"></span>
-							<h3>{tool.title}</h3>
-							<p>{tool.description}</p>
-						</a>
-					</li>
-				))
-			}
-		</ul>
-	</section>
+	</header>
+
+	<dl class="identity">
+		{
+			identity.map((item) => (
+				<div>
+					<dt class="label">{item.label}</dt>
+					<dd>{item.value}</dd>
+				</div>
+			))
+		}
+		<div>
+			<dt class="label">Status</dt>
+			<dd class="status">
+				<span class="pulse" aria-hidden="true" />
+				Currently building
+			</dd>
+		</div>
+	</dl>
+
+	<div class="garden">
+		<section class="notes" aria-labelledby="notes-label">
+			<header class="section-head">
+				<span class="label" id="notes-label">Latest notes</span>
+				<a class="more mono" href="/blog">
+					Archive / {String(allPosts.length).padStart(2, '0')} <span aria-hidden="true">→</span>
+				</a>
+			</header>
+			<ul class="note-list">
+				{
+					posts.map((post, index) => (
+						<NoteEntry
+							index={index + 1}
+							href={`/blog/${post.id}/`}
+							title={post.data.title}
+							description={post.data.description}
+							date={post.data.pubDate}
+							last={index === posts.length - 1}
+						/>
+					))
+				}
+			</ul>
+		</section>
+
+		<aside class="rail">
+			<BuildingPanel />
+			<UtilityShelf />
+		</aside>
+	</div>
 </Page>
 
 <style>
+	/* ---------- Hero ---------- */
+
 	.hero {
-		margin-bottom: 3rem;
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) auto;
+		align-items: center;
+		gap: 2.5rem;
+		padding-bottom: 3.2rem;
 	}
-	.eyebrow {
-		margin: 0 0 0.5rem;
-		color: rgb(var(--gray));
-		font-size: 0.9rem;
-		letter-spacing: 0.04em;
+
+	.hero-text > * {
+		animation: hero-in 0.6s var(--ease) both;
 	}
+
+	.domain {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 0.55rem;
+		margin: 0 0 1.6rem;
+		font-size: 0.65rem;
+		letter-spacing: 0.16em;
+		text-transform: uppercase;
+		color: var(--muted);
+		animation-delay: 0.04s;
+	}
+
+	.slash {
+		color: var(--border);
+	}
+
+	.hero-text h1 {
+		margin: 0;
+		font-size: clamp(2.6rem, 7.4vw, 5rem);
+		font-weight: 800;
+		letter-spacing: -0.035em;
+		line-height: 1.02;
+		animation-delay: 0.1s;
+	}
+
 	.lead {
-		font-size: 1.15rem;
-		color: rgb(var(--gray-dark));
+		margin: 1.4rem 0 0;
+		max-width: 22ch;
+		color: var(--text-soft);
+		font-size: clamp(1.05rem, 1.7vw, 1.35rem);
+		line-height: 1.6;
+		animation-delay: 0.18s;
 	}
+
+	.lead-en {
+		margin: 0.9rem 0 0;
+		max-width: 40ch;
+		color: var(--muted-soft);
+		font-size: 0.72rem;
+		letter-spacing: 0.1em;
+		text-transform: uppercase;
+		animation-delay: 0.26s;
+	}
+
+	.hero-mark {
+		justify-self: end;
+	}
+
+	@keyframes hero-in {
+		from {
+			opacity: 0;
+			transform: translateY(12px);
+		}
+		to {
+			opacity: 1;
+			transform: none;
+		}
+	}
+
+	/* Hero recedes a little as the page scrolls (Chromium scroll-driven animations). */
+	@supports (animation-timeline: scroll()) {
+		@media (prefers-reduced-motion: no-preference) {
+			.hero {
+				animation: hero-recede linear both;
+				animation-timeline: --page-scroll;
+				animation-range: 0 45vh;
+			}
+			@keyframes hero-recede {
+				to {
+					opacity: 0.45;
+					transform: translateY(-8px);
+				}
+			}
+		}
+	}
+
+	/* ---------- Identity metadata ---------- */
+
+	.identity {
+		display: grid;
+		grid-template-columns: repeat(5, minmax(0, 1fr));
+		gap: 1.4rem;
+		margin: 0 0 4.5rem;
+		padding-top: 1.2rem;
+		border-top: 1px solid var(--border);
+		animation: hero-in 0.6s var(--ease) 0.34s both;
+	}
+
+	.identity dt {
+		margin-bottom: 0.35rem;
+		font-size: 0.58rem;
+	}
+
+	.identity dd {
+		margin: 0;
+		color: var(--text-soft);
+		font-size: 0.85rem;
+	}
+
+	.status {
+		display: flex;
+		align-items: center;
+		gap: 0.4rem;
+	}
+
+	/* ---------- Garden grid ---------- */
+
+	.garden {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) 268px;
+		gap: 4rem;
+		align-items: start;
+	}
+
 	.section-head {
 		display: flex;
 		align-items: baseline;
 		justify-content: space-between;
 		gap: 1rem;
-		margin-bottom: 1rem;
+		padding-bottom: 0.9rem;
+		border-bottom: 1px solid var(--border);
 	}
-	.section-head h2 {
-		font-size: 1.563em;
-		margin: 0;
+
+	.more {
+		font-size: 0.63rem;
+		letter-spacing: 0.14em;
+		text-transform: uppercase;
+		color: var(--muted);
+		text-decoration: none;
+		white-space: nowrap;
+		transition: color 0.25s var(--ease);
 	}
-	.post-list,
-	.tool-grid {
+
+	.more span {
+		display: inline-block;
+		transition: transform 0.25s var(--ease);
+	}
+
+	.more:hover {
+		color: var(--accent);
+	}
+
+	.more:hover span {
+		transform: translateX(3px);
+	}
+
+	.note-list {
 		list-style: none;
-		margin: 0 0 3rem;
+		margin: 0;
 		padding: 0;
-		display: grid;
-		gap: 1rem;
 	}
-	.post-list a,
-	.tool-grid a {
-		padding: 1.1rem 1.8rem 1.1rem 1.2rem;
+
+	.rail {
+		position: sticky;
+		top: 3rem;
+		display: flex;
+		flex-direction: column;
+		gap: 2.2rem;
 	}
-	.post-list a:hover,
-	.tool-grid a:hover {
-		color: inherit;
+
+	/* ---------- Responsive ---------- */
+
+	@media (max-width: 1199px) {
+		.garden {
+			grid-template-columns: minmax(0, 1fr);
+			gap: 3.5rem;
+		}
+		.rail {
+			position: static;
+			display: grid;
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+			gap: 2rem;
+			align-items: start;
+		}
+		.identity {
+			grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+			row-gap: 1.6rem;
+		}
 	}
-	.post-list h3,
-	.tool-grid h3 {
-		margin: 0 0 0.4rem;
-		font-size: 1.15rem;
-	}
-	.post-list p,
-	.tool-grid p {
-		margin: 0 0 0.5rem;
-		color: rgb(var(--gray));
-		font-size: 0.95rem;
-	}
-	.post-list time {
-		color: rgb(var(--gray));
-		font-size: 0.85rem;
-	}
-	.tool-grid {
-		grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+
+	@media (max-width: 767px) {
+		.hero {
+			grid-template-columns: minmax(0, 1fr);
+			gap: 1.8rem;
+			padding-bottom: 2.4rem;
+		}
+		.hero-mark {
+			justify-self: start;
+		}
+		.identity {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+			gap: 1.2rem;
+			margin-bottom: 3rem;
+		}
+		.rail {
+			grid-template-columns: minmax(0, 1fr);
+		}
 	}
 </style>

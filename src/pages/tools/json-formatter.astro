@@ -4,9 +4,14 @@ import Page from '../../layouts/Page.astro';
 ---
 
 <Page title={`JSON 格式化 | ${SITE_TITLE}`} description="在浏览器中美化、压缩和复制 JSON。">
-	<p class="back"><a href="/tools">← 全部工具</a></p>
-	<h1>JSON 格式化</h1>
-	<p class="intro">粘贴 JSON 后可以美化、压缩或复制。全部在本地处理，不会发送到服务器。</p>
+	<header class="page-head">
+		<a class="back mono" href="/tools">
+			<span aria-hidden="true">←</span> Utilities
+		</a>
+		<p class="label">Utility / 01 · JSON Formatter</p>
+		<h1>JSON 格式化</h1>
+		<p class="intro">粘贴 JSON 后可以美化、压缩或复制。全部在本地处理，不会发送到服务器。</p>
+	</header>
 
 	<div class="toolbar">
 		<button id="format-btn" type="button">格式化</button>
@@ -20,41 +25,100 @@ import Page from '../../layouts/Page.astro';
 </Page>
 
 <style>
+	.page-head {
+		margin-bottom: 2rem;
+		animation: rise 0.55s var(--ease) both;
+	}
 	.back {
-		margin-bottom: 0.5rem;
-		font-size: 0.95rem;
+		display: inline-block;
+		margin-bottom: 1.8rem;
+		font-size: 0.63rem;
+		letter-spacing: 0.16em;
+		text-transform: uppercase;
+		color: var(--muted);
+		text-decoration: none;
+	}
+	.back span {
+		display: inline-block;
+		transition: transform 0.25s var(--ease);
+	}
+	.back:hover {
+		color: var(--accent);
+	}
+	.back:hover span {
+		transform: translateX(-3px);
+	}
+	.page-head .label {
+		margin-bottom: 0.8rem;
+	}
+	.page-head h1 {
+		margin: 0;
+		font-size: clamp(1.9rem, 4.4vw, 2.6rem);
+		font-weight: 800;
+		letter-spacing: -0.03em;
 	}
 	.intro {
-		color: rgb(var(--gray));
+		margin: 0.9rem 0 0;
+		max-width: 46ch;
+		color: var(--muted);
+		font-size: 0.95rem;
 	}
 	.toolbar {
 		display: flex;
 		flex-wrap: wrap;
-		gap: 0.6rem;
-		margin: 1rem 0 0.5rem;
+		gap: 0.5rem;
+		margin: 0 0 0.7rem;
+		padding-top: 1.4rem;
+		border-top: 1px solid var(--border);
 	}
+	/* One solid primary action; the rest stay quiet until hovered. */
 	button {
-		border: 0;
-		border-radius: 8px;
-		padding: 0.45rem 0.9rem;
-		background: var(--accent);
-		color: #fff;
-		font: inherit;
+		border: 1px solid var(--border);
+		border-radius: 2px;
+		padding: 0.42rem 0.95rem;
+		background: transparent;
+		color: var(--text-soft);
+		font-family: var(--font-mono);
+		font-size: 0.72rem;
+		letter-spacing: 0.08em;
 		cursor: pointer;
-	}
-	button.ghost {
-		background: rgb(var(--gray-light));
-		color: rgb(var(--gray-dark));
+		transition:
+			background-color 0.2s var(--ease),
+			border-color 0.2s var(--ease),
+			color 0.2s var(--ease),
+			transform 0.15s var(--ease);
 	}
 	button:hover {
-		background: var(--accent-dark);
+		border-color: var(--accent-quiet);
+		color: var(--accent);
+	}
+	button.ghost {
+		border-color: transparent;
+		color: var(--muted-soft);
+	}
+	button.ghost:hover {
+		border-color: var(--border);
+		color: var(--muted);
+	}
+	#format-btn {
+		border-color: var(--accent);
+		background: var(--accent);
 		color: #fff;
+	}
+	#format-btn:hover {
+		background: var(--accent-strong);
+		border-color: var(--accent-strong);
+		color: #fff;
+	}
+	button:active {
+		transform: translateY(1px);
 	}
 	.status {
 		min-height: 1.5em;
-		margin: 0 0 0.6rem;
-		font-size: 0.95rem;
-		color: rgb(var(--gray));
+		margin: 0 0 0.7rem;
+		font-family: var(--font-mono);
+		font-size: 0.72rem;
+		color: var(--muted);
 	}
 	.status.error {
 		color: #b42318;
@@ -63,16 +127,22 @@ import Page from '../../layouts/Page.astro';
 		color: #027a48;
 	}
 	textarea {
-		box-sizing: border-box;
 		width: 100%;
 		min-height: 420px;
 		padding: 1rem;
-		border: 1px solid rgb(var(--gray-light));
-		border-radius: 12px;
-		font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-		font-size: 0.95rem;
-		line-height: 1.5;
+		border: 1px solid var(--border);
+		border-radius: 3px;
+		background: var(--surface);
+		color: var(--text);
+		font-family: var(--font-mono);
+		font-size: 0.9rem;
+		line-height: 1.6;
 		resize: vertical;
+		transition: border-color 0.2s var(--ease);
+	}
+	textarea:focus {
+		outline: none;
+		border-color: var(--accent-quiet);
 	}
 </style>
 

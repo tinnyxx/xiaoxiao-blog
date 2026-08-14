@@ -4,17 +4,32 @@ import { tools } from '../../data/tools';
 import Page from '../../layouts/Page.astro';
 ---
 
-<Page title={`工具 | ${SITE_TITLE}`} description="浏览器里就能用的开发小工具。" wide>
-	<h1>工具</h1>
-	<p class="intro">这些工具都在你的浏览器里运行，不会把内容上传到服务器。</p>
-	<ul class="tool-grid">
+<Page title={`工具 | ${SITE_TITLE}`} description="浏览器里就能用的开发小工具。">
+	<header class="page-head">
+		<p class="label">Utilities / Shelf</p>
+		<h1>工具</h1>
+		<p class="intro">
+			这些工具都在你的浏览器里运行，不会把内容上传到服务器。想到什么缺的就顺手做一个放在这里。
+		</p>
+	</header>
+
+	<ul class="shelf">
 		{
-			tools.map((tool) => (
-				<li>
-					<a class="card" href={tool.href}>
-						<span class="dot" aria-hidden="true"></span>
-						<h2>{tool.title}</h2>
-						<p>{tool.description}</p>
+			tools.map((tool, index) => (
+				<li data-reveal>
+					<a href={tool.href}>
+						<span class="idx mono">{String(index + 1).padStart(2, '0')}</span>
+						<span class="glyph mono" aria-hidden="true">
+							{tool.glyph ?? '·'}
+						</span>
+						<span class="body">
+							<span class="name">{tool.title}</span>
+							{tool.label && <span class="en mono">{tool.label}</span>}
+							<span class="desc">{tool.description}</span>
+						</span>
+						<span class="arrow" aria-hidden="true">
+							→
+						</span>
 					</a>
 				</li>
 			))
@@ -23,32 +38,130 @@ import Page from '../../layouts/Page.astro';
 </Page>
 
 <style>
-	.intro {
-		color: rgb(var(--gray));
-		margin-bottom: 1.5rem;
+	.page-head {
+		margin-bottom: 3rem;
+		animation: rise 0.55s var(--ease) both;
 	}
-	.tool-grid {
+
+	.page-head .label {
+		margin-bottom: 0.9rem;
+	}
+
+	.page-head h1 {
+		margin: 0;
+		font-size: clamp(2.1rem, 5vw, 3.1rem);
+		font-weight: 800;
+		letter-spacing: -0.03em;
+	}
+
+	.intro {
+		margin: 1rem 0 0;
+		max-width: 44ch;
+		color: var(--muted);
+		font-size: 0.95rem;
+	}
+
+	.shelf {
 		list-style: none;
 		margin: 0;
 		padding: 0;
+		border-top: 1px solid var(--border);
+	}
+
+	.shelf li {
+		border-bottom: 1px solid var(--border-soft);
+	}
+
+	.shelf a {
 		display: grid;
-		grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-		gap: 1rem;
-	}
-	.tool-grid a {
-		height: 100%;
-		padding: 1.2rem 1.8rem 1.2rem 1.2rem;
-	}
-	.tool-grid a:hover {
+		grid-template-columns: 2.6rem 2.2rem minmax(0, 1fr) auto;
+		align-items: start;
+		padding: 1.5rem 0.3rem 1.6rem;
+		text-decoration: none;
 		color: inherit;
+		transition: transform 0.3s var(--ease);
 	}
-	.tool-grid h2 {
-		margin: 0 0 0.5rem;
-		font-size: 1.25rem;
+
+	.shelf a:hover {
+		transform: translateX(6px);
 	}
-	.tool-grid p {
-		margin: 0;
-		color: rgb(var(--gray));
-		font-size: 0.95rem;
+
+	.shelf a:active {
+		transform: translateX(6px) translateY(1px);
+	}
+
+	.idx,
+	.glyph {
+		padding-top: 0.2rem;
+		font-size: 0.68rem;
+		color: var(--muted-soft);
+		transition: color 0.25s var(--ease);
+	}
+
+	.idx {
+		font-size: 0.62rem;
+	}
+
+	.shelf a:hover .glyph {
+		color: var(--accent);
+	}
+
+	.name {
+		display: block;
+		color: var(--text);
+		font-size: 1.1rem;
+		font-weight: 600;
+		transition: color 0.25s var(--ease);
+	}
+
+	.shelf a:hover .name {
+		color: var(--accent);
+	}
+
+	.en {
+		display: block;
+		margin-top: 0.2rem;
+		font-size: 0.6rem;
+		letter-spacing: 0.16em;
+		text-transform: uppercase;
+		color: var(--muted-soft);
+	}
+
+	.desc {
+		display: block;
+		margin-top: 0.5rem;
+		max-width: 48ch;
+		color: var(--muted);
+		font-size: 0.9rem;
+		line-height: 1.65;
+	}
+
+	.arrow {
+		padding-top: 0.25rem;
+		color: var(--accent);
+		font-size: 0.9rem;
+		opacity: 0;
+		transform: translateX(-5px);
+		transition:
+			opacity 0.3s var(--ease),
+			transform 0.3s var(--ease);
+	}
+
+	.shelf a:hover .arrow {
+		opacity: 1;
+		transform: none;
+	}
+
+	@media (max-width: 767px) {
+		.shelf a {
+			grid-template-columns: 2rem 1.8rem minmax(0, 1fr);
+			padding: 1.2rem 0 1.3rem;
+		}
+		.arrow {
+			display: none;
+		}
+		.name {
+			font-size: 1.02rem;
+		}
 	}
 </style>

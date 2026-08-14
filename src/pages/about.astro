@@ -1,25 +1,133 @@
 ---
-import AboutHeroImage from '../assets/blog-placeholder-about.jpg';
-import Layout from '../layouts/BlogPost.astro';
+import { SITE_TITLE } from '../consts';
+import Page from '../layouts/Page.astro';
+
+const facts = [
+	{ label: 'Stack', value: 'Astro · TypeScript · CSS' },
+	{ label: 'Deploy', value: 'Ubuntu · GitHub' },
+	{ label: 'Writing', value: 'Markdown' },
+	{ label: 'Since', value: '2026' },
+];
 ---
 
-<Layout
-	title="关于"
-	description="小小博客：分享开发笔记和在线小工具。"
-	pubDate={new Date('2026-08-13')}
-	heroImage={AboutHeroImage}
->
-	<p>
-		这是我的个人站点，用来记录开发过程中用到的方法和自己做的小工具。域名是
-		<a href="https://xiaoxiaoptopfile.top">xiaoxiaoptopfile.top</a>。
-	</p>
-	<p>目前站点包含两部分：</p>
-	<ul>
-		<li><a href="/blog">文章</a>：用 Markdown 写的开发笔记。</li>
-		<li><a href="/tools">工具</a>：运行在浏览器里的小工具，例如 JSON 格式化。</li>
-	</ul>
-	<p>
-		站点基于 Astro 构建，部署在自己的 Ubuntu 服务器上。新增文章或工具后，通过 GitHub
-		同步到服务器即可上线。
-	</p>
-</Layout>
+<Page title={`关于 | ${SITE_TITLE}`} description="小小博客：分享开发笔记和在线小工具。">
+	<header class="page-head">
+		<p class="label">About / 关于</p>
+		<h1>关于这个小站</h1>
+		<p class="intro">一个人的数字花园：一边写笔记，一边做工具，慢慢长大。</p>
+	</header>
+
+	<div class="body">
+		<p>
+			这是我的个人站点，用来记录开发过程中用到的方法和自己做的小工具。域名是
+			<a href="https://xiaoxiaoptopfile.top">xiaoxiaoptopfile.top</a>。
+		</p>
+		<p>目前站点包含两部分：</p>
+		<ul class="parts">
+			<li>
+				<span class="mono idx">01</span>
+				<span>
+					<a href="/blog">文章</a>：用 Markdown 写的开发笔记。
+				</span>
+			</li>
+			<li>
+				<span class="mono idx">02</span>
+				<span>
+					<a href="/tools">工具</a>：运行在浏览器里的小工具，例如 JSON 格式化。
+				</span>
+			</li>
+		</ul>
+		<p>
+			站点基于 Astro 构建，部署在自己的 Ubuntu 服务器上。新增文章或工具后，通过 GitHub
+			同步到服务器即可上线。
+		</p>
+	</div>
+
+	<dl class="facts">
+		{
+			facts.map((fact) => (
+				<div>
+					<dt class="label">{fact.label}</dt>
+					<dd>{fact.value}</dd>
+				</div>
+			))
+		}
+	</dl>
+</Page>
+
+<style>
+	.page-head {
+		margin-bottom: 2.5rem;
+		animation: rise 0.55s var(--ease) both;
+	}
+
+	.page-head .label {
+		margin-bottom: 0.9rem;
+	}
+
+	.page-head h1 {
+		margin: 0;
+		font-size: clamp(2.1rem, 5vw, 3.1rem);
+		font-weight: 800;
+		letter-spacing: -0.03em;
+	}
+
+	.intro {
+		margin: 1rem 0 0;
+		max-width: 40ch;
+		color: var(--muted);
+		font-size: 0.95rem;
+	}
+
+	.body {
+		max-width: 54ch;
+		padding-top: 2rem;
+		border-top: 1px solid var(--border);
+	}
+
+	.parts {
+		list-style: none;
+		margin: 0 0 1.6rem;
+		padding: 0;
+	}
+
+	.parts li {
+		display: grid;
+		grid-template-columns: 2.2rem 1fr;
+		align-items: baseline;
+		padding: 0.6rem 0;
+		border-bottom: 1px solid var(--border-soft);
+	}
+
+	.idx {
+		font-size: 0.62rem;
+		color: var(--muted-soft);
+	}
+
+	.facts {
+		display: grid;
+		grid-template-columns: repeat(4, minmax(0, 1fr));
+		gap: 1.4rem;
+		margin: 3.5rem 0 0;
+		padding-top: 1.2rem;
+		border-top: 1px solid var(--border);
+	}
+
+	.facts dt {
+		margin-bottom: 0.35rem;
+		font-size: 0.58rem;
+	}
+
+	.facts dd {
+		margin: 0;
+		color: var(--text-soft);
+		font-size: 0.85rem;
+	}
+
+	@media (max-width: 767px) {
+		.facts {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+			gap: 1.2rem;
+		}
+	}
+</style>

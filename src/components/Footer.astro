@@ -1,19 +1,90 @@
 ---
 import { SITE_AUTHOR } from '../consts';
 
-const today = new Date();
+interface Props {
+	wide?: boolean;
+}
+
+const { wide = false } = Astro.props;
+const year = new Date().getFullYear();
 ---
 
-<footer>
-	&copy; {today.getFullYear()} {SITE_AUTHOR} · <a href="https://xiaoxiaoptopfile.top">xiaoxiaoptopfile.top</a>
+<footer class:list={{ wide }}>
+	<div class="row mono">
+		<span>© {year} {SITE_AUTHOR}</span>
+		<span class="sep" aria-hidden="true">/</span>
+		<a href="https://xiaoxiaoptopfile.top">xiaoxiaoptopfile.top</a>
+		<span class="grow"></span>
+		<a href="/rss.xml">RSS</a>
+	</div>
+	<p class="note">Still growing · 持续记录</p>
 </footer>
+
 <style>
 	footer {
-		padding: 2em 1em 6em 1em;
-		color: rgb(var(--gray));
-		text-align: center;
+		margin: 0 auto;
+		padding: 3rem 2.5rem 4rem;
+		width: 760px;
+		max-width: 100%;
 	}
-	footer a {
-		color: rgb(var(--gray));
+
+	footer.wide {
+		width: 1120px;
+	}
+
+	.row {
+		display: flex;
+		align-items: center;
+		gap: 0.6rem;
+		padding-top: 1.1rem;
+		border-top: 1px solid var(--border-soft);
+		font-size: 0.63rem;
+		letter-spacing: 0.14em;
+		text-transform: uppercase;
+		color: var(--muted-soft);
+	}
+
+	.grow {
+		flex: 1;
+	}
+
+	.sep {
+		color: var(--border);
+	}
+
+	.row a {
+		color: var(--muted);
+		text-decoration: none;
+	}
+
+	.row a:hover {
+		color: var(--accent);
+	}
+
+	.note {
+		margin: 0.7rem 0 0;
+		font-size: 0.75rem;
+		color: var(--muted-soft);
+	}
+
+	@media (max-width: 1199px) {
+		footer,
+		footer.wide {
+			width: 100%;
+			padding: 2.5rem 2rem 3.5rem;
+		}
+	}
+
+	@media (max-width: 767px) {
+		footer {
+			padding: 2rem 1.25rem 3rem;
+		}
+		.row {
+			flex-wrap: wrap;
+			row-gap: 0.4rem;
+		}
+		.grow {
+			flex-basis: 100%;
+		}
 	}
 </style>

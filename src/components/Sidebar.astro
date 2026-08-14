@@ -2,77 +2,329 @@
 import { SITE_TITLE } from '../consts';
 import { tools } from '../data/tools';
 import HeaderLink from './HeaderLink.astro';
+
+const nav = [
+	{ href: '/', zh: '首页', en: 'Garden' },
+	{ href: '/blog', zh: '文章', en: 'Notes' },
+	{ href: '/tools', zh: '工具', en: 'Utilities' },
+	{ href: '/about', zh: '关于', en: 'About' },
+];
+
+const year = new Date().getFullYear();
 ---
 
-<aside id="site-sidebar" class="sidebar glass">
-	<a class="brand" href="/">{SITE_TITLE}</a>
-	<nav>
-		<HeaderLink href="/">首页</HeaderLink>
-		<HeaderLink href="/blog">文章</HeaderLink>
-		<div class="group">
-			<HeaderLink href="/tools">工具</HeaderLink>
-			<div class="sub">
-				{tools.map((tool) => <HeaderLink href={tool.href}>{tool.title}</HeaderLink>)}
-			</div>
+<aside id="site-sidebar" class="sidebar">
+	<div class="inner">
+		<a class="brand" href="/">
+			<span class="brand-mark" aria-hidden="true"></span>
+			<span class="brand-name">{SITE_TITLE}</span>
+			<span class="brand-sub label">Personal digital garden</span>
+		</a>
+
+		<p class="status">
+			<span class="pulse" aria-hidden="true"></span>
+			<span class="label">Online</span>
+		</p>
+
+		<nav class="nav" aria-label="站点导航">
+			<span class="label group-label">Menu</span>
+			{
+				nav.map((item, index) => (
+					<HeaderLink class="nav-item" href={item.href}>
+						<span class="line" aria-hidden="true" />
+						<span class="nav-index mono">{String(index + 1).padStart(2, '0')}</span>
+						<span class="nav-zh">{item.zh}</span>
+						<span class="nav-en mono">{item.en}</span>
+					</HeaderLink>
+				))
+			}
+		</nav>
+
+		<div class="shelf">
+			<span class="label group-label">Tools</span>
+			{
+				tools.map((tool) => (
+					<HeaderLink class="shelf-item" href={tool.href} title={tool.title}>
+						<span class="line" aria-hidden="true" />
+						<span class="shelf-glyph mono" aria-hidden="true">
+							{tool.glyph ?? '·'}
+						</span>
+						<span class="shelf-name">{tool.label ?? tool.title}</span>
+					</HeaderLink>
+				))
+			}
 		</div>
-		<HeaderLink href="/about">关于</HeaderLink>
-	</nav>
+
+		<div class="foot mono">
+			<a href="/rss.xml">RSS</a>
+			<span aria-hidden="true">/</span>
+			<span>{year}</span>
+		</div>
+	</div>
 </aside>
 
 <style>
 	.sidebar {
 		width: var(--sidebar-width);
 		flex-shrink: 0;
-		box-sizing: border-box;
-		padding: 1.4rem 1rem 2rem;
-		border-right: 1px solid rgba(255, 255, 255, 0.4);
 		position: sticky;
 		top: 0;
 		height: 100vh;
 		overflow-y: auto;
 		z-index: 10;
-	}
-	.brand {
-		display: block;
-		margin: 0 0.75rem 1.4rem;
-		font-weight: 700;
-		color: rgb(var(--black));
-		text-decoration: none;
-	}
-	nav :global(a) {
-		padding: 0.45rem 0.75rem;
-		border-radius: 8px;
-		color: rgb(var(--gray-dark));
-	}
-	nav :global(a:hover) {
-		background: rgba(var(--gray-light), 0.7);
-	}
-	nav :global(a.active) {
-		background: rgb(var(--gray-light));
-		color: var(--accent);
-	}
-	.group {
-		margin: 0.15rem 0;
-	}
-	.sub {
-		margin: 0.15rem 0 0.4rem 0.6rem;
-		padding-left: 0.5rem;
-		border-left: 2px solid rgb(var(--gray-light));
-	}
-	.sub :global(a) {
-		font-size: 0.92rem;
-		padding: 0.3rem 0.7rem;
-		color: rgb(var(--gray));
+		background: rgba(240, 236, 227, 0.82);
+		border-right: 1px solid var(--border);
 	}
 
-	@media (max-width: 860px) {
+	.inner {
+		display: flex;
+		flex-direction: column;
+		min-height: 100%;
+		padding: 1.9rem 1.1rem 1.4rem;
+	}
+
+	/* ----- Brand ----- */
+
+	.brand {
+		display: grid;
+		grid-template-columns: auto 1fr;
+		align-items: center;
+		column-gap: 0.6rem;
+		row-gap: 0.3rem;
+		margin: 0 0.35rem;
+		text-decoration: none;
+	}
+
+	.brand-mark {
+		position: relative;
+		width: 11px;
+		height: 11px;
+		border: 1px solid var(--accent-quiet);
+		border-radius: 50%;
+		transition: transform 0.35s var(--ease);
+	}
+
+	.brand-mark::after {
+		content: '';
+		position: absolute;
+		inset: 3px;
+		border-radius: 50%;
+		background: var(--accent);
+	}
+
+	.brand:hover .brand-mark {
+		transform: scale(1.25);
+	}
+
+	.brand-name {
+		color: var(--text);
+		font-size: 1.02rem;
+		font-weight: 700;
+		letter-spacing: -0.01em;
+	}
+
+	.brand-sub {
+		grid-column: 2;
+		font-size: 0.56rem;
+		letter-spacing: 0.2em;
+		color: var(--muted-soft);
+	}
+
+	.status {
+		display: flex;
+		align-items: center;
+		gap: 0.45rem;
+		margin: 1.1rem 0.35rem 2.2rem;
+	}
+
+	.status .label {
+		font-size: 0.56rem;
+		letter-spacing: 0.22em;
+		color: var(--muted);
+	}
+
+	/* ----- Groups ----- */
+
+	.group-label {
+		margin: 0 0.75rem 0.7rem;
+		font-size: 0.56rem;
+		color: var(--muted-soft);
+	}
+
+	.nav {
+		display: flex;
+		flex-direction: column;
+		gap: 1px;
+	}
+
+	.shelf {
+		margin-top: 2.2rem;
+		display: flex;
+		flex-direction: column;
+		gap: 1px;
+	}
+
+	/* Anchors come from <HeaderLink>, so they need :global(). */
+	.nav :global(.nav-item),
+	.shelf :global(.shelf-item) {
+		position: relative;
+		display: grid;
+		align-items: baseline;
+		padding: 0.44rem 0.75rem;
+		border-radius: 3px;
+		text-decoration: none;
+		color: var(--text-soft);
+		transition:
+			background-color 0.25s var(--ease),
+			transform 0.15s var(--ease);
+	}
+
+	.nav :global(.nav-item) {
+		grid-template-columns: 1.55rem 1fr auto;
+	}
+
+	.shelf :global(.shelf-item) {
+		grid-template-columns: 1.55rem 1fr;
+	}
+
+	.nav :global(.nav-item:hover),
+	.shelf :global(.shelf-item:hover) {
+		background-color: rgba(20, 22, 26, 0.03);
+	}
+
+	.nav :global(.nav-item.active) {
+		background-color: var(--accent-wash);
+	}
+
+	/* Thin indicator line on the left edge. */
+	.line {
+		position: absolute;
+		left: 0;
+		top: 50%;
+		width: 1px;
+		height: 1.1rem;
+		background: var(--accent);
+		transform: translateY(-50%) scaleY(0);
+		transform-origin: center;
+		transition: transform 0.3s var(--ease);
+	}
+
+	.nav :global(.nav-item:hover) .line,
+	.nav :global(.nav-item.active) .line,
+	.shelf :global(.shelf-item:hover) .line {
+		transform: translateY(-50%) scaleY(1);
+	}
+
+	.nav-index {
+		font-size: 0.62rem;
+		color: var(--muted-soft);
+		transition:
+			transform 0.3s var(--ease),
+			color 0.25s var(--ease);
+	}
+
+	.nav-zh,
+	.shelf-name {
+		font-size: 0.92rem;
+		transition:
+			transform 0.3s var(--ease),
+			color 0.25s var(--ease);
+	}
+
+	.nav-en {
+		font-size: 0.56rem;
+		letter-spacing: 0.14em;
+		text-transform: uppercase;
+		color: var(--muted-soft);
+		opacity: 0;
+		transition: opacity 0.3s var(--ease);
+	}
+
+	.nav :global(.nav-item:hover) .nav-index,
+	.nav :global(.nav-item.active) .nav-index {
+		color: var(--accent-quiet);
+		transform: translateX(2px);
+	}
+
+	.nav :global(.nav-item:hover) .nav-zh,
+	.shelf :global(.shelf-item:hover) .shelf-name {
+		transform: translateX(4px);
+		color: var(--text);
+	}
+
+	.nav :global(.nav-item.active) .nav-zh {
+		color: var(--text);
+		font-weight: 700;
+	}
+
+	.nav :global(.nav-item:hover) .nav-en,
+	.nav :global(.nav-item.active) .nav-en {
+		opacity: 1;
+	}
+
+	/* ----- Tool shelf ----- */
+
+	.shelf :global(.shelf-item:active) {
+		transform: translateY(1px);
+	}
+
+	.shelf-glyph {
+		font-size: 0.68rem;
+		color: var(--muted-soft);
+		transition: color 0.25s var(--ease);
+	}
+
+	.shelf-name {
+		font-size: 0.84rem;
+		color: var(--muted);
+	}
+
+	.shelf :global(.shelf-item:hover) .shelf-glyph,
+	.shelf :global(.shelf-item.active) .shelf-glyph {
+		color: var(--accent);
+	}
+
+	.shelf :global(.shelf-item.active) .shelf-name {
+		color: var(--text);
+	}
+
+	/* ----- Foot ----- */
+
+	.foot {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		margin: auto 0.85rem 0;
+		padding-top: 1rem;
+		border-top: 1px solid var(--border-soft);
+		font-size: 0.6rem;
+		letter-spacing: 0.14em;
+		text-transform: uppercase;
+		color: var(--muted-soft);
+	}
+
+	.foot a {
+		color: var(--muted);
+		text-decoration: none;
+	}
+
+	.foot a:hover {
+		color: var(--accent);
+	}
+
+	.foot span[aria-hidden] {
+		color: var(--border);
+	}
+
+	@media (max-width: 900px) {
 		.sidebar {
 			position: fixed;
 			left: 0;
+			top: 0;
 			z-index: 20;
+			background: var(--bg-sidebar);
 			transform: translateX(-100%);
-			transition: transform 0.2s ease;
-			box-shadow: var(--box-shadow);
+			transition: transform 0.28s var(--ease);
 		}
 		:global(body.sidebar-open) .sidebar {
 			transform: translateX(0);

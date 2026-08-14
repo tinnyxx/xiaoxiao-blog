@@ -10,7 +10,7 @@ interface Props {
 const { title, description, wide = false } = Astro.props;
 ---
 
-<SiteLayout title={title} description={description}>
+<SiteLayout title={title} description={description} wide={wide}>
 	<main class:list={{ wide }}>
 		<slot />
 	</main>

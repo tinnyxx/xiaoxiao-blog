@@ -1,0 +1,129 @@
+---
+import { tools } from '../data/tools';
+---
+
+<section class="shelf" data-reveal aria-labelledby="utilities-label">
+	<header class="head">
+		<span class="label" id="utilities-label">Utilities</span>
+		<a class="mono all" href="/tools">All</a>
+	</header>
+
+	<ul>
+		{
+			tools.map((tool) => (
+				<li>
+					<a href={tool.href}>
+						<span class="glyph mono" aria-hidden="true">
+							{tool.glyph ?? '·'}
+						</span>
+						<span class="names">
+							<span class="en">{tool.label ?? tool.title}</span>
+							<span class="zh">{tool.title}</span>
+						</span>
+						<span class="arrow" aria-hidden="true">
+							→
+						</span>
+					</a>
+				</li>
+			))
+		}
+	</ul>
+</section>
+
+<style>
+	.head {
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+		gap: 0.6rem;
+		padding-bottom: 0.6rem;
+		border-bottom: 1px solid var(--border-soft);
+	}
+
+	.all {
+		font-size: 0.6rem;
+		letter-spacing: 0.16em;
+		text-transform: uppercase;
+		color: var(--muted);
+		text-decoration: none;
+	}
+
+	.all:hover {
+		color: var(--accent);
+	}
+
+	ul {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+	}
+
+	li + li {
+		border-top: 1px solid var(--border-soft);
+	}
+
+	a {
+		display: grid;
+		grid-template-columns: 1.6rem 1fr auto;
+		align-items: center;
+		gap: 0 0.35rem;
+		padding: 0.75rem 0.1rem;
+		text-decoration: none;
+		color: inherit;
+		transition: transform 0.18s var(--ease);
+	}
+
+	a:active {
+		transform: translateY(1px);
+	}
+
+	.glyph {
+		font-size: 0.72rem;
+		color: var(--muted-soft);
+		transition: color 0.25s var(--ease);
+	}
+
+	.names {
+		min-width: 0;
+	}
+
+	.en {
+		display: block;
+		color: var(--text);
+		font-size: 0.85rem;
+		font-weight: 600;
+		transition:
+			color 0.25s var(--ease),
+			transform 0.25s var(--ease);
+	}
+
+	.zh {
+		display: block;
+		color: var(--muted-soft);
+		font-size: 0.72rem;
+	}
+
+	.arrow {
+		color: var(--accent);
+		font-size: 0.8rem;
+		opacity: 0;
+		transform: translateX(-4px);
+		transition:
+			opacity 0.25s var(--ease),
+			transform 0.25s var(--ease);
+	}
+
+	a:hover .glyph {
+		color: var(--accent);
+	}
+
+	a:hover .en {
+		color: var(--accent);
+		transform: translateX(3px);
+	}
+
+	a:hover .arrow {
+		opacity: 1;
+		transform: none;
+	}
+</style>

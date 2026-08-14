@@ -1,0 +1,130 @@
+---
+import { building } from '../data/building';
+---
+
+<section class="panel" data-reveal aria-labelledby="building-label">
+	<header class="head">
+		<span class="label" id="building-label">Currently building</span>
+		<span class="mono count">{String(building.length).padStart(2, '0')}</span>
+	</header>
+
+	<ul>
+		{
+			building.map((item, index) => (
+				<li>
+					<span class="idx mono">{String(index + 1).padStart(2, '0')}</span>
+					<span class="text">
+						<span class="title">{item.title}</span>
+						<span class="desc">{item.note}</span>
+					</span>
+					{item.stage && <span class="stage mono">{item.stage}</span>}
+				</li>
+			))
+		}
+	</ul>
+
+	<p class="now">
+		<span class="pulse" aria-hidden="true"></span>
+		<span>Building something new…</span>
+	</p>
+</section>
+
+<style>
+	.panel {
+		position: relative;
+		padding: 1.2rem 1.1rem 1rem;
+		border: 1px solid var(--border);
+		border-radius: 2px;
+		background: var(--surface);
+	}
+
+	/* Perforated top edge, like a small note torn off a pad. */
+	.panel::before {
+		content: '';
+		position: absolute;
+		left: 1.1rem;
+		right: 1.1rem;
+		top: -1px;
+		height: 1px;
+		background: repeating-linear-gradient(
+			to right,
+			var(--accent-quiet) 0 3px,
+			transparent 3px 8px
+		);
+		opacity: 0.45;
+	}
+
+	.head {
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+		gap: 0.6rem;
+		padding-bottom: 0.85rem;
+		border-bottom: 1px solid var(--border-soft);
+	}
+
+	.count {
+		font-size: 0.6rem;
+		color: var(--muted-soft);
+	}
+
+	ul {
+		list-style: none;
+		margin: 0;
+		padding: 0.3rem 0 0;
+	}
+
+	li {
+		display: grid;
+		grid-template-columns: 1.4rem 1fr auto;
+		align-items: baseline;
+		gap: 0 0.3rem;
+		padding: 0.7rem 0;
+	}
+
+	li + li {
+		border-top: 1px solid var(--border-soft);
+	}
+
+	.idx {
+		font-size: 0.6rem;
+		color: var(--muted-soft);
+	}
+
+	.text {
+		min-width: 0;
+	}
+
+	.title {
+		display: block;
+		color: var(--text);
+		font-size: 0.9rem;
+		font-weight: 600;
+	}
+
+	.desc {
+		display: block;
+		margin-top: 0.15rem;
+		color: var(--muted);
+		font-size: 0.78rem;
+		line-height: 1.6;
+	}
+
+	.stage {
+		font-size: 0.55rem;
+		letter-spacing: 0.16em;
+		color: var(--muted-soft);
+	}
+
+	.now {
+		display: flex;
+		align-items: center;
+		gap: 0.45rem;
+		margin: 0.5rem 0 0;
+		padding-top: 0.85rem;
+		border-top: 1px dashed var(--border);
+		font-family: var(--font-mono);
+		font-size: 0.66rem;
+		color: var(--muted);
+	}
+</style>
