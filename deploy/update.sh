@@ -47,11 +47,11 @@ echo "==> 发布到 $WEB_DIR"
 mkdir -p "$WEB_DIR"
 rsync -a --delete dist/ "$WEB_DIR/"
 
-# 服务进程从自己的 cwd 读取 .env；首次部署从示例生成，之后保留服务器上的 Key。
+# 服务进程从自己的 cwd（REPO_DIR）读取 .env；首次部署从示例生成，之后保留服务器上的 Key。
 # 这里不中断：站点会照常启动，只是 /api/ask 会提示「未配置 Key」，填好 Key 后重启即可。
-if [ ! -f "$WEB_DIR/.env" ]; then
-  cp "$REPO_DIR/.env.example" "$WEB_DIR/.env"
-  echo "⚠ 首次部署：已生成 $WEB_DIR/.env，填入 DEEPSEEK_API_KEY 后执行 pm2 restart $PM2_APP"
+if [ ! -f "$REPO_DIR/.env" ]; then
+  cp "$REPO_DIR/.env.example" "$REPO_DIR/.env"
+  echo "⚠ 首次部署：已生成 $REPO_DIR/.env，填入 DEEPSEEK_API_KEY 后执行 pm2 restart $PM2_APP"
 fi
 
 echo "==> 重启服务"

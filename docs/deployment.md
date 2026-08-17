@@ -64,16 +64,16 @@ dist/
 
 ## 5. 发布并启动服务
 
-把产物放到站点目录（下面用 `/var/www/xiaoxiaoptopfile.top`，可自行替换）：
+**Node 服务从仓库目录运行**（`~/xiao-blog`），这样它才能访问 `node_modules` 里的本地 embedding 依赖，以及仓库根目录的 `.env` 和 `data/` 索引缓存。Nginx 只负责把静态文件（`client/`）直接发给浏览器，动态请求再转给 Node。
 
 ```bash
+# 静态文件部署到 web 目录（Nginx 从这里直接读）
 sudo mkdir -p /var/www/xiaoxiaoptopfile.top
 sudo chown -R "$USER:$USER" /var/www/xiaoxiaoptopfile.top
-
 rsync -a --delete dist/ /var/www/xiaoxiaoptopfile.top/
 
-# 把 .env 也放过去（服务进程从自己的 cwd 读取）
-cp .env /var/www/xiaoxiaoptopfile.top/.env
+# .env 放在仓库根目录（服务进程从 ~/xiao-blog 运行，读这里的 .env）
+[ -f .env ] || cp .env.example .env
 
 # 用 PM2 启动（配置见 deploy/ecosystem.config.cjs）
 pm2 start deploy/ecosystem.config.cjs
@@ -85,11 +85,13 @@ PM2 配置 `deploy/ecosystem.config.cjs` 关键点：
 
 ```js
 {
-  script: 'server/entry.mjs',   // 相对 cwd
-  cwd: '/var/www/xiaoxiaoptopfile.top',
+  script: 'dist/server/entry.mjs',   // 相对 cwd
+  cwd: '~/xiao-blog',                 // 仓库目录
   env: { HOST: '127.0.0.1', PORT: 4321 },
 }
 ```
+
+> **为什么从仓库目录运行？** 因为 `@huggingface/transformers` 被标记为 SSR external，运行时需要从 `node_modules` 解析；而 `/var/www` 里没有 node_modules。从仓库目录跑，Node 才能加载本地 embedding 模型，否则会静默降级成 hash 向量。
 
 服务默认监听 `127.0.0.1:4321`，只对 Nginx 暴露，不直接对公网。
 
@@ -195,7 +197,7 @@ curl -X POST http://127.0.0.1:4321/api/ingest
 ## 常见问题
 
 **Q：问答返回「服务端未配置 DEEPSEEK_API_KEY」？**
-检查 `/var/www/xiaoxiaoptopfile.top/.env` 是否存在且填了 Key，然后 `pm2 restart xiaoxiao-blog`。
+检查仓库根目录的 `.env`（`~/xiao-blog/.env`）是否存在且填了 Key，然后 `pm2 restart xiaoxiao-blog`。
 
 **Q：`npm ci` 报 `onnxruntime-node` 安装失败（HTTP status code = 302）？**
 这是 onnxruntime-node 默认会去 NuGet 下载 CUDA/GPU 二进制导致的。本项目只用 CPU 推理，不需要这些文件，已在 `.npmrc` 和 `deploy/update.sh` 里通过 `ONNXRUNTIME_NODE_INSTALL=skip` 跳过。如果你手动 `npm ci` 时仍报错，执行：
