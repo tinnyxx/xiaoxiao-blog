@@ -48,10 +48,10 @@ mkdir -p "$WEB_DIR"
 rsync -a --delete dist/ "$WEB_DIR/"
 
 # 服务进程从自己的 cwd 读取 .env；首次部署从示例生成，之后保留服务器上的 Key。
+# 这里不中断：站点会照常启动，只是 /api/ask 会提示「未配置 Key」，填好 Key 后重启即可。
 if [ ! -f "$WEB_DIR/.env" ]; then
   cp "$REPO_DIR/.env.example" "$WEB_DIR/.env"
-  echo "已生成 $WEB_DIR/.env，请填入 DEEPSEEK_API_KEY 后重新运行本脚本。"
-  exit 1
+  echo "⚠ 首次部署：已生成 $WEB_DIR/.env，填入 DEEPSEEK_API_KEY 后执行 pm2 restart $PM2_APP"
 fi
 
 echo "==> 重启服务"
@@ -76,3 +76,8 @@ fi
 
 echo "发布完成：https://xiaoxiaoptopfile.top"
 echo "已发布提交：$(git rev-parse --short HEAD)"
+echo ""
+echo "⚠ 如果这是首次切换到 SSR 部署（页面访问 403），需要手动更新 Nginx 配置："
+echo "   sudo cp $REPO_DIR/deploy/nginx.conf /etc/nginx/sites-available/xiaoxiaoptopfile.top"
+echo "   sudo ln -sf /etc/nginx/sites-available/xiaoxiaoptopfile.top /etc/nginx/sites-enabled/xiaoxiaoptopfile.top"
+echo "   sudo nginx -t && sudo systemctl reload nginx"
