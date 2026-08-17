@@ -163,12 +163,18 @@ sudo systemctl reload nginx
 
 > **关键**：`proxy_buffering off` 不能省，否则流式回答会被 Nginx 缓冲成一整块才返回，打字机效果就没了。
 
-## 8. 配置 HTTPS（可选）
+## 8. 配置 HTTPS
+
+`deploy/nginx.conf` 里已经同时监听了 80 和 443，并引用了 certbot 的证书路径（`/etc/letsencrypt/live/xiaoxiaoptopfile.top/`）。只要证书存在，套用该配置后 HTTPS 即可用。
+
+如果还没有证书，先运行 certbot 申请（它会顺带把证书路径建好）：
 
 ```bash
 sudo apt install -y certbot python3-certbot-nginx
 sudo certbot --nginx -d xiaoxiaoptopfile.top -d www.xiaoxiaoptopfile.top
 ```
+
+> 注意：如果服务器上没有 `/etc/letsencrypt/live/xiaoxiaoptopfile.top/` 证书，`nginx -t` 会报「cannot load certificate」。这时先跑上面的 certbot 命令，再 `sudo nginx -t && sudo systemctl reload nginx`。
 
 ## 日常更新
 
