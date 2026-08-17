@@ -394,7 +394,7 @@ html.reveal-ready [data-reveal].is-visible {
 .back-to-top {
 	position: fixed;
 	right: 1.6rem;
-	bottom: 1.6rem;
+	bottom: 4.6rem;
 	z-index: 30;
 	width: 38px;
 	height: 38px;
@@ -421,6 +421,46 @@ html.reveal-ready [data-reveal].is-visible {
 	opacity: 1;
 	pointer-events: auto;
 	transform: translateY(0);
+}
+
+/* ---------- Ask AI floating entry ---------- */
+
+.ask-fab {
+	position: fixed;
+	right: 1.6rem;
+	bottom: 1.6rem;
+	z-index: 30;
+	display: inline-flex;
+	align-items: center;
+	gap: 0.5rem;
+	padding: 0.55rem 0.95rem;
+	border: 1px solid var(--accent);
+	border-radius: 999px;
+	background: var(--accent);
+	color: #fff;
+	font-family: var(--font-mono);
+	font-size: 0.72rem;
+	letter-spacing: 0.06em;
+	text-decoration: none;
+	box-shadow: 0 8px 24px rgba(59, 91, 208, 0.28);
+	transition:
+		background-color 0.2s var(--ease),
+		border-color 0.2s var(--ease),
+		transform 0.2s var(--ease),
+		box-shadow 0.2s var(--ease);
+}
+
+.ask-fab:hover {
+	background: var(--accent-strong);
+	border-color: var(--accent-strong);
+	transform: translateY(-2px);
+	box-shadow: 0 12px 28px rgba(59, 91, 208, 0.36);
+}
+
+.ask-fab-spark {
+	font-size: 0.9rem;
+	line-height: 1;
+	animation: pulse 2.8s var(--ease) infinite;
 }
 
 /* ---------- Responsive ---------- */
@@ -504,6 +544,10 @@ html.reveal-ready [data-reveal].is-visible {
 		padding: 2.25rem 1.25rem 3rem;
 	}
 	.back-to-top {
+		right: 1rem;
+		bottom: 4.2rem;
+	}
+	.ask-fab {
 		right: 1rem;
 		bottom: 1rem;
 	}

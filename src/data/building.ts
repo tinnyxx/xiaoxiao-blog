@@ -7,9 +7,9 @@ export interface BuildingItem {
 
 export const building: BuildingItem[] = [
 	{
-		title: 'AI Tools',
-		note: '把常用的模型调用包成顺手的小工具。',
-		stage: 'WIP',
+		title: 'RAG 问答助手',
+		note: '基于文章向量检索 + DeepSeek 的博客问答。',
+		stage: 'LIVE',
 	},
 	{
 		title: 'Pet Community',

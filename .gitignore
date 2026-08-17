@@ -17,6 +17,9 @@ pnpm-debug.log*
 .env
 .env.production
 
+# RAG 运行时缓存（索引与向量，由服务自动生成）
+data/
+
 # macOS-specific files
 .DS_Store
 

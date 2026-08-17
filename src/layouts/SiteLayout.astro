@@ -47,6 +47,10 @@ const { title, description, image, wide = false } = Astro.props;
 		</div>
 		<BackToTop />
 		<ScrollReveal />
+		<a class="ask-fab" href="/ask" aria-label="打开博客 AI 问答助手">
+			<span class="ask-fab-spark" aria-hidden="true">✦</span>
+			<span class="ask-fab-label">Ask AI</span>
+		</a>
 		<script>
 			const toggle = document.getElementById('sidebar-toggle');
 			const backdrop = document.getElementById('sidebar-backdrop');
