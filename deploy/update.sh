@@ -30,6 +30,8 @@ if [ "$NODE_MAJOR" -lt 22 ]; then
 fi
 
 echo "==> 安装依赖"
+# 跳过 onnxruntime-node 的 CUDA/GPU 二进制下载（本项目只用 CPU 推理）
+export ONNXRUNTIME_NODE_INSTALL=skip
 npm ci
 
 echo "==> 构建"

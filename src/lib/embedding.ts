@@ -71,7 +71,13 @@ export class LocalEmbedder implements Embedder {
 	async ensureLoaded(): Promise<void> {
 		if (!this.loadPromise) {
 			this.loadPromise = (async () => {
-				const { pipeline } = await import('@huggingface/transformers');
+				const { pipeline, env } = await import('@huggingface/transformers');
+				// 支持 HuggingFace 镜像：国内服务器可设 HF_ENDPOINT=https://hf-mirror.com
+				if (process.env.HF_ENDPOINT) {
+					env.remoteHost = process.env.HF_ENDPOINT.endsWith('/')
+						? process.env.HF_ENDPOINT
+						: `${process.env.HF_ENDPOINT}/`;
+				}
 				this.pipeline = (await pipeline('feature-extraction', 'Xenova/bge-small-zh-v1.5', {
 					pooling: 'mean',
 					normalize: true,

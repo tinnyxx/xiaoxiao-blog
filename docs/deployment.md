@@ -191,8 +191,22 @@ curl -X POST http://127.0.0.1:4321/api/ingest
 **Q：问答返回「服务端未配置 DEEPSEEK_API_KEY」？**
 检查 `/var/www/xiaoxiaoptopfile.top/.env` 是否存在且填了 Key，然后 `pm2 restart xiaoxiao-blog`。
 
+**Q：`npm ci` 报 `onnxruntime-node` 安装失败（HTTP status code = 302）？**
+这是 onnxruntime-node 默认会去 NuGet 下载 CUDA/GPU 二进制导致的。本项目只用 CPU 推理，不需要这些文件，已在 `.npmrc` 和 `deploy/update.sh` 里通过 `ONNXRUNTIME_NODE_INSTALL=skip` 跳过。如果你手动 `npm ci` 时仍报错，执行：
+
+```bash
+export ONNXRUNTIME_NODE_INSTALL=skip
+npm ci
+```
+
 **Q：embedding 显示降级成了 hash？**
-说明本地模型下载失败。检查服务器能否访问 `huggingface.co`，或手动触发一次 `/api/ingest` 观察日志。纯调试阶段用 hash 也能跑通。
+说明本地模型下载失败。检查服务器能否访问 `huggingface.co`；国内服务器建议在 `.env` 里配置镜像：
+
+```bash
+HF_ENDPOINT=https://hf-mirror.com
+```
+
+然后 `pm2 restart xiaoxiao-blog`，再 `curl -X POST http://127.0.0.1:4321/api/ingest`。纯调试阶段用 `EMBEDDING_PROVIDER=hash` 也能跑通全流程。
 
 **Q：回答不是流式的、一次性出现？**
 多半是 Nginx 没关 `proxy_buffering`，或中间还有一层 CDN/反代在缓冲。确认 `X-Accel-Buffering: no` 响应头已带上。
