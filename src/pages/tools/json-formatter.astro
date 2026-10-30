@@ -153,6 +153,7 @@ import Page from '../../layouts/Page.astro';
 	const minifyBtn = document.querySelector('#minify-btn');
 	const copyBtn = document.querySelector('#copy-btn');
 	const clearBtn = document.querySelector('#clear-btn');
+	const invalid = Symbol('invalid-json');
 
 	function setStatus(message: string, kind: '' | 'ok' | 'error' = '') {
 		if (!status) return;
@@ -161,31 +162,31 @@ import Page from '../../layouts/Page.astro';
 	}
 
 	function parseJson() {
-		if (!input) return null;
+		if (!input) return invalid;
 		const raw = input.value.trim();
 		if (!raw) {
 			setStatus('请先粘贴 JSON。', 'error');
-			return null;
+			return invalid;
 		}
 		try {
 			return JSON.parse(raw);
 		} catch (error) {
 			const message = error instanceof Error ? error.message : 'JSON 无法解析';
 			setStatus(message, 'error');
-			return null;
+			return invalid;
 		}
 	}
 
 	formatBtn?.addEventListener('click', () => {
 		const data = parseJson();
-		if (data === null || !input) return;
+		if (data === invalid || !input) return;
 		input.value = JSON.stringify(data, null, 2);
 		setStatus('已格式化。', 'ok');
 	});
 
 	minifyBtn?.addEventListener('click', () => {
 		const data = parseJson();
-		if (data === null || !input) return;
+		if (data === invalid || !input) return;
 		input.value = JSON.stringify(data);
 		setStatus('已压缩。', 'ok');
 	});

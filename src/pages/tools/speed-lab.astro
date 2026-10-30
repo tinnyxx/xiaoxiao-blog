@@ -26,6 +26,7 @@ import Page from '../../layouts/Page.astro';
 		<p class="kicker mono">Lab / 04 · Network Monitor</p>
 		<h1>Website Speed Lab</h1>
 		<p class="lede-en mono">Turn a page load into a live telemetry trace.</p>
+		<p><a href="/performance" style="color:var(--lab-cyan)">查看本站定时性能记录 →</a></p>
 
 		<form class="console" data-form>
 			<label class="sr-only" for="lab-url">网站 URL</label>
@@ -46,8 +47,8 @@ import Page from '../../layouts/Page.astro';
 
 		<section class="panel idle" data-panel="idle">
 			<p class="lede">
-				探测在你的浏览器里发起。当前页可以读到完整 Navigation Timing；第三方站点若未开放
-				<code>Timing-Allow-Origin</code>，阶段会被清零——我们不会用假数据填上，只会标明缺失，并提供完整仪表盘的实验室样本。
+				探测在你的浏览器里发起。当前页可以读到 Navigation Timing；第三方站点通常不开放
+				<code>Timing-Allow-Origin</code>，也无法读取完整页面的 DOM / Load。此时只展示探测数据，不给整站性能打分；实验室样本会明确标记为模拟数据。
 			</p>
 		</section>
 

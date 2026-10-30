@@ -37,33 +37,22 @@ function readConnection(entry: PerformanceResourceTiming | PerformanceNavigation
 	};
 }
 
-function findResource(url: string): PerformanceResourceTiming | undefined {
-	const entries = performance.getEntriesByType('resource') as PerformanceResourceTiming[];
-	const exact = entries.filter((entry) => entry.name === url);
-	return exact.at(-1) ?? entries.filter((entry) => entry.name.startsWith(url)).at(-1);
-}
-
 async function probeFetch(url: string, signal: AbortSignal): Promise<{ elapsed: number; entry?: PerformanceResourceTiming }> {
 	const before = performance.getEntriesByType('resource').length;
 	const started = performance.now();
-	try {
-		await fetch(url, {
-			method: 'GET',
-			mode: isSameOrigin(url) ? 'cors' : 'no-cors',
-			cache: 'no-store',
-			credentials: 'omit',
-			referrerPolicy: 'no-referrer',
-			signal,
-		});
-	} catch (error) {
-		if ((error as Error).name === 'AbortError') throw error;
-		// Opaque no-cors fetch rarely throws; a throw usually means network failure.
-	}
+	const response = await fetch(url, {
+		method: 'GET',
+		mode: isSameOrigin(url) ? 'cors' : 'no-cors',
+		cache: 'no-store',
+		credentials: 'omit',
+		referrerPolicy: 'no-referrer',
+		signal,
+	});
+	if (response.type !== 'opaque' && !response.ok) throw new Error(`探测请求失败：HTTP ${response.status}`);
 	const elapsed = performance.now() - started;
 	await new Promise((resolve) => setTimeout(resolve, 32));
-	const entry =
-		findResource(url) ??
-		(performance.getEntriesByType('resource') as PerformanceResourceTiming[]).slice(before).at(-1);
+	const entry = (performance.getEntriesByType('resource') as PerformanceResourceTiming[])
+		.slice(before).filter((item) => item.name === url).at(-1);
 	return { elapsed, entry };
 }
 

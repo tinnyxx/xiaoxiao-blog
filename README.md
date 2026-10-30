@@ -15,6 +15,7 @@
 - B站关注时间（调公开接口）
 - 程序员人格测试
 - Website Speed Lab（浏览器 Navigation Timing 可视化）
+- 站点性能记录：每日采集本站移动端 Lighthouse 实验室指标，展示历史趋势与失败状态
 
 ### AI：RAG 问答助手（旗舰功能）
 - 基于**本站文章**的检索增强问答，回答附**引用来源**
@@ -143,6 +144,14 @@ deploy/
 
 - [架构与设计决策](./docs/architecture.md)
 - [部署指南（服务器落地）](./docs/deployment.md)
+
+## 📈 站点性能记录
+
+`npm run monitor` 调用 PageSpeed Insights API 测量固定的本站首页，将移动端 Lighthouse 分数、LCP、CLS、TBT、FCP 写入 `src/data/performance-history.json`。缺失指标保留为空，失败采样单独记录；同一天重试会替换旧记录，最多保存 90 次。可选环境变量 `PAGESPEED_API_KEY` 用于提高调用额度，不应写入仓库。
+
+GitHub Actions 的 `performance-monitor.yml` 每日运行，也支持手动触发。它会测试、构建并将历史记录提交到默认分支；服务器仍需再次运行 `bash deploy/update.sh` 才会显示新数据。首次采样前 `/performance` 会显示空状态。
+
+这些是实验室模拟数据，不是访客真实体验数据。TBT 不能当作 INP。`/tools/speed-lab` 的跨域浏览器探测缺少完整页面阶段时不会给整站打分。
 
 ## Credit
 

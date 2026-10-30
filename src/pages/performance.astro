@@ -1,0 +1,142 @@
+---
+import history from '../data/performance-history.json';
+import { SITE_TITLE } from '../consts';
+import Page from '../layouts/Page.astro';
+
+type Success = {
+  checkedAt: string;
+  status: 'ok';
+  score: number;
+  lcpMs: number | null;
+  cls: number | null;
+  tbtMs: number | null;
+  fcpMs: number | null;
+  lighthouseVersion: string | null;
+};
+type Failure = { checkedAt: string; status: 'failed'; reason: string };
+type Record = Success | Failure;
+const records = history.records as Record[];
+const successful = records.filter((record): record is Success => record.status === 'ok');
+const latest = records[0];
+const current = successful[0];
+const previous = successful[1];
+const trend = [...successful].slice(0, 14).reverse();
+const date = (value: string) => new Intl.DateTimeFormat('zh-CN', {
+  dateStyle: 'medium', timeStyle: 'short', timeZone: 'Asia/Shanghai',
+}).format(new Date(value));
+const ms = (value: number | null) => value == null ? '—' : `${Math.round(value)} ms`;
+const cls = (value: number | null) => value == null ? '—' : value.toFixed(3);
+const delta = current && previous ? current.score - previous.score : null;
+---
+
+<Page title={`站点性能记录 | ${SITE_TITLE}`} description="小小博客的移动端性能采样、历史趋势与测量说明。" wide>
+  <header class="head">
+    <p class="label">Performance / History</p>
+    <h1>站点性能记录</h1>
+    <p class="intro">定时测量本站首页，保留最近 90 次记录。每个数字都来自一次真实的 PageSpeed Insights 移动端 Lighthouse 实验室运行。</p>
+    <a class="lab-link" href="/tools/speed-lab">打开交互式测速实验室 <span aria-hidden="true">→</span></a>
+  </header>
+
+  {records.length === 0 ? (
+    <section class="empty" aria-labelledby="empty-title">
+      <p class="label">Waiting for first sample</p>
+      <h2 id="empty-title">还没有采样数据</h2>
+      <p>定时任务首次运行后，这里会显示真实记录。当前没有用演示数字填充图表。</p>
+    </section>
+  ) : (
+    <>
+      {latest.status === 'failed' && (
+        <p class="notice" role="status">最近一次采样失败（{date(latest.checkedAt)}）：{latest.reason}。以下保留上一次成功结果。</p>
+      )}
+      {current ? (
+        <>
+          <section class="summary" aria-label="最近一次成功采样">
+            <div class="score-card">
+              <span class="label">Mobile / Lighthouse</span>
+              <strong class="score">{current.score}<small> / 100</small></strong>
+              <span class="change">{delta == null ? '等待下一次采样以比较' : `较上次 ${delta > 0 ? '+' : ''}${delta} 分`}</span>
+              <time datetime={current.checkedAt}>{date(current.checkedAt)}</time>
+            </div>
+            <dl class="metrics">
+              <div><dt>LCP <span>最大内容绘制</span></dt><dd>{ms(current.lcpMs)}</dd></div>
+              <div><dt>CLS <span>布局偏移</span></dt><dd>{cls(current.cls)}</dd></div>
+              <div><dt>TBT <span>总阻塞时间</span></dt><dd>{ms(current.tbtMs)}</dd></div>
+              <div><dt>FCP <span>首次内容绘制</span></dt><dd>{ms(current.fcpMs)}</dd></div>
+            </dl>
+          </section>
+
+          <section class="section" aria-labelledby="trend-title">
+            <div class="section-head"><h2 id="trend-title">分数趋势</h2><span class="label">最近 {trend.length} 次成功采样</span></div>
+            <div class="chart" role="img" aria-label={`按时间从早到晚的性能分数：${trend.map((record) => `${date(record.checkedAt)} ${record.score} 分`).join('；')}`}>
+              {trend.map((record) => <div class="bar-wrap" title={`${date(record.checkedAt)}：${record.score} 分`}><span class="bar" style={`height:${record.score}%`}></span><span class="bar-value mono">{record.score}</span></div>)}
+            </div>
+            <p class="hint">单次实验室结果会受运行环境影响；趋势用于发现变化，不能代替真实用户体验数据。</p>
+          </section>
+        </>
+      ) : (
+        <section class="empty"><h2>尚无成功采样</h2><p>采样失败记录保留在下表，修复采集问题后再运行即可。</p></section>
+      )}
+
+      <section class="section" aria-labelledby="records-title">
+        <div class="section-head"><h2 id="records-title">采样记录</h2><span class="label">Mobile · 最多 90 次</span></div>
+        <div class="table-scroll"><table>
+          <thead><tr><th scope="col">时间</th><th scope="col">状态</th><th scope="col">分数</th><th scope="col">LCP</th><th scope="col">CLS</th><th scope="col">TBT</th><th scope="col">备注</th></tr></thead>
+          <tbody>{records.map((record) => <tr>
+            <td><time datetime={record.checkedAt}>{date(record.checkedAt)}</time></td>
+            <td>{record.status === 'ok' ? '成功' : '失败'}</td>
+            <td>{record.status === 'ok' ? record.score : '—'}</td>
+            <td>{record.status === 'ok' ? ms(record.lcpMs) : '—'}</td>
+            <td>{record.status === 'ok' ? cls(record.cls) : '—'}</td>
+            <td>{record.status === 'ok' ? ms(record.tbtMs) : '—'}</td>
+            <td>{record.status === 'failed' ? record.reason : '—'}</td>
+          </tr>)}</tbody>
+        </table></div>
+      </section>
+    </>
+  )}
+
+  <aside class="method">
+    <h2>这些数字如何产生</h2>
+    <p>定时任务调用 Google PageSpeed Insights API，对 <a href={history.target}>{history.target}</a> 做移动端 Lighthouse 实验室测量。页面展示 API 返回的原始指标和分数，不重新编造综合评分。缺失指标显示为「—」，请求失败单独记录。</p>
+    <p>TBT 是实验室指标，不能当作真实用户的 INP。这里没有接入真实用户数据；不同日期的网络与设备模拟条件可能影响结果。</p>
+  </aside>
+</Page>
+
+<style>
+  .head { margin-bottom: 3rem; }
+  .head h1 { margin: .7rem 0 1rem; color: var(--text); font-size: clamp(2.2rem, 5vw, 3.5rem); line-height: 1.15; }
+  .intro { max-width: 62ch; color: var(--text-soft); }
+  .lab-link { display: inline-block; margin-top: .5rem; color: var(--accent); text-decoration: none; font-weight: 600; }
+  .lab-link:hover { text-decoration: underline; }
+  .empty, .method { padding: 2rem; border: 1px solid var(--border); background: var(--surface); }
+  .empty h2, .method h2 { margin: .5rem 0; color: var(--text); }
+  .empty p, .method p { max-width: 75ch; }
+  .notice { padding: 1rem 1.2rem; border-left: 3px solid #b86a43; background: #fff4eb; }
+  .summary { display: grid; grid-template-columns: minmax(230px, 1fr) 2fr; gap: 1.5rem; }
+  .score-card { display: flex; flex-direction: column; padding: 1.6rem; background: var(--text); color: #fff; }
+  .score-card .label { color: #aeb8cb; }
+  .score { margin: .5rem 0; font-size: 4.5rem; line-height: 1; }
+  .score small { font-size: 1rem; font-weight: 400; color: #aeb8cb; }
+  .change { margin-bottom: 1rem; }
+  .score-card time { margin-top: auto; color: #aeb8cb; font-size: .78rem; }
+  .metrics { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; margin: 0; }
+  .metrics div { padding: 1.2rem; border: 1px solid var(--border); background: var(--surface); }
+  .metrics dt { color: var(--muted); font: 600 .76rem var(--font-mono); }
+  .metrics dt span { display: block; margin-top: .3rem; font: 400 .8rem var(--font-sans); }
+  .metrics dd { margin: .9rem 0 0; color: var(--text); font-size: 1.55rem; font-weight: 700; }
+  .section { margin: 3.5rem 0; }
+  .section-head { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; border-bottom: 1px solid var(--border); }
+  .section-head h2 { margin: 0 0 .8rem; color: var(--text); font-size: 1.3rem; }
+  .chart { display: flex; align-items: end; gap: .6rem; height: 220px; padding: 2rem .2rem 1.5rem; border-bottom: 1px solid var(--border); }
+  .bar-wrap { position: relative; display: flex; flex: 1; align-items: end; justify-content: center; height: 100%; min-width: 0; }
+  .bar { display: block; width: min(100%, 44px); min-height: 2px; background: var(--accent); }
+  .bar-value { position: absolute; bottom: 100%; color: var(--muted); font-size: .65rem; }
+  .hint { color: var(--muted); font-size: .8rem; }
+  .table-scroll { overflow-x: auto; }
+  table { width: 100%; min-width: 720px; border-collapse: collapse; text-align: left; font-size: .82rem; }
+  th, td { padding: .8rem .5rem; border-bottom: 1px solid var(--border-soft); }
+  th { color: var(--muted); font-weight: 600; }
+  .method { margin-top: 3rem; }
+  .method a { overflow-wrap: anywhere; }
+  @media (max-width: 700px) { .summary { grid-template-columns: 1fr; } .chart { gap: .25rem; } .bar-value { font-size: .55rem; } }
+</style>

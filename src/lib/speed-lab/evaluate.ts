@@ -23,6 +23,16 @@ function scoreMs(ms: number, good: number, poor: number): number {
 }
 
 export function evaluate(trace: ProbeTrace): LabVerdict {
+	if (trace.source === 'browser' ||
+		(trace.source === 'navigation' && (trace.phases.dom.status !== 'ok' || trace.phases.load.status !== 'ok'))) {
+		return {
+			score: null,
+			grade: 'Unscored',
+			gradeZh: '未评分',
+			headline: trace.source === 'browser' ? '探测已完成；这不是完整页面加载成绩' : '页面加载阶段数据不完整，暂不评分',
+			notes: notes(trace),
+		};
+	}
 	let weighted = 0;
 	let mass = 0;
 	for (const [id, budget] of Object.entries(BUDGETS) as [PhaseId, (typeof BUDGETS)[PhaseId]][]) {
@@ -31,11 +41,10 @@ export function evaluate(trace: ProbeTrace): LabVerdict {
 		weighted += scoreMs(ms, budget.good, budget.poor) * budget.weight;
 		mass += budget.weight;
 	}
-	const score = mass === 0
-		? trace.totalMs != null
-			? Math.round(scoreMs(trace.totalMs, BUDGETS.load.good, BUDGETS.load.poor))
-			: 0
-		: Math.round(weighted / mass);
+	const score = mass === 0 ? null : Math.round(weighted / mass);
+	if (score === null) {
+		return { score, grade: 'Unscored', gradeZh: '未评分', headline: '缺少足够的阶段数据', notes: notes(trace) };
+	}
 	const band = GRADE.find((item) => score >= item.min) ?? GRADE[GRADE.length - 1];
 	return {
 		score,
@@ -128,7 +137,7 @@ export function formatResult(result: ProbeTrace & LabVerdict): string {
 		'Website Speed Lab',
 		result.url,
 		`Mode   ${mode}`,
-		`Score  ${result.score} / 100  ${result.grade}`,
+		`Score  ${result.score == null ? 'Unscored' : `${result.score} / 100  ${result.grade}`}`,
 		`Total  ${formatMs(result.totalMs)}`,
 		'',
 		rows,

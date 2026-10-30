@@ -125,10 +125,13 @@ export function mountSpeedLab(root: HTMLElement) {
 		gradeEl.textContent = result.grade;
 		gradeZh.textContent = result.gradeZh;
 		copyStatus.textContent = '';
-		roll(scoreEl, result.score, 0, 900);
+		if (result.score == null) scoreEl.textContent = '—';
+		else roll(scoreEl, result.score, 0, 900);
+		const scoreDenominator = root.querySelector<HTMLElement>('.gauge-read .over');
+		if (scoreDenominator) scoreDenominator.hidden = result.score == null;
 		if (result.totalMs == null) totalEl.textContent = '—';
 		else roll(totalEl, result.totalMs, 1, 900);
-		setGauge(result.score);
+		setGauge(result.score ?? 0);
 		renderTiles(result);
 		renderWaterfall(result);
 		notesEl.replaceChildren(

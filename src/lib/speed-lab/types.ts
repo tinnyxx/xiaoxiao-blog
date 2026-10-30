@@ -11,7 +11,7 @@ export type PhaseId = (typeof PHASES)[number]['id'];
 
 export type ProbeSource = 'navigation' | 'browser' | 'demo';
 export type PhaseStatus = 'ok' | 'unavailable';
-export type LabGrade = 'Excellent' | 'Good' | 'Fair' | 'Poor';
+export type LabGrade = 'Excellent' | 'Good' | 'Fair' | 'Poor' | 'Unscored';
 export type LabMode = 'idle' | 'scan' | 'result' | 'error';
 
 export interface PhaseSample {
@@ -35,7 +35,7 @@ export interface ProbeTrace {
 }
 
 export interface LabVerdict {
-	score: number;
+	score: number | null;
 	grade: LabGrade;
 	gradeZh: string;
 	headline: string;

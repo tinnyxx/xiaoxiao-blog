@@ -37,9 +37,17 @@ export const tools: Tool[] = [
 	{
 		id: 'speed-lab',
 		title: 'Website Speed Lab',
-		description: '把一次网站加载画成带评分的性能时间轴。能测则测，不能测就标明。',
+		description: '浏览器端交互探测；本站的定时实验室数据可在性能记录中查看。',
 		href: '/tools/speed-lab',
 		label: 'Speed Lab',
 		glyph: '⌁',
+	},
+	{
+		id: 'performance',
+		title: '站点性能记录',
+		description: '定时采集本站移动端 Lighthouse 数据，展示历史趋势、失败记录与测量边界。',
+		href: '/performance',
+		label: 'Performance History',
+		glyph: '▥',
 	},
 ];
