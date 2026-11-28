@@ -2,6 +2,11 @@
   "target": "https://xiaoxiaoptopfile.top/",
   "records": [
     {
+      "checkedAt": "2026-11-28T10:34:56.599Z",
+      "status": "failed",
+      "reason": "PageSpeed HTTP 429"
+    },
+    {
       "checkedAt": "2026-11-27T10:58:27.604Z",
       "status": "failed",
       "reason": "PageSpeed HTTP 429"
